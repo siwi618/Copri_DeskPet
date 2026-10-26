@@ -43,7 +43,7 @@ html, body {
 .iris { fill: var(--iris); }
 .glint { fill: #fff; }
 .teeth { fill: #fff; }
-.mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: .45; stroke-linejoin: miter; }
+.mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: .32; stroke-linejoin: miter; }
 /* 眼睛组按绿环半径缩放过，线宽也以绿环半径为单位 */
 .eye-closed { fill: none; stroke: var(--ink); stroke-width: .26; stroke-linecap: round; }
 .shard { fill: var(--green); }
