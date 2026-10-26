@@ -3,8 +3,7 @@
   --hair-ol: #8b4ff0;
   --ink: #06040f;
   --green: #6cf084;
-  --iris: #2a5ad8;
-  --iris-ol: #0b1240;
+  --iris: #2e6bd4;
 }
 
 html, body {
@@ -41,12 +40,12 @@ html, body {
 .hair-base { fill: none; }
 .hair-fill { fill: var(--hair); }
 .hair-ol { fill: var(--hair-ol); }
-.eye-ring { fill: none; stroke: var(--green); stroke-width: .75; }
-.iris { fill: var(--iris); stroke: var(--ink); stroke-width: .45; }
-.glint { fill: #fff; stroke: var(--ink); stroke-width: .3; }
+.iris { fill: var(--iris); }
+.glint { fill: #fff; }
 .teeth { fill: #fff; }
-.mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: .8; stroke-linejoin: miter; }
-.eye-closed { fill: none; stroke: var(--ink); stroke-width: 1.1; stroke-linecap: square; }
+.mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: .45; stroke-linejoin: miter; }
+/* 眼睛组按绿环半径缩放过，线宽也以绿环半径为单位 */
+.eye-closed { fill: none; stroke: var(--ink); stroke-width: .26; stroke-linecap: round; }
 .shard { fill: var(--green); }
 #shadow ellipse { fill: rgba(0, 0, 0, .18); }
 
@@ -64,7 +63,7 @@ html, body {
 #shadow { transform-origin: 135px 466px; animation: shadow 3.2s ease-in-out infinite; }
 #hair { transform-origin: 131px 175px; animation: flicker 3.6s ease-in-out infinite; }
 #bangs { transform-origin: 131px 106px; }
-#head { transform-origin: 131px 150px; transition: transform .25s; }
+#head { transform-origin: 131px 144px; transition: transform .25s; }
 .limb { transition: transform .3s; }
 #legL { transform-origin: 119px 258px; animation: dangleL 3.2s ease-in-out infinite; }
 #legR { transform-origin: 143px 258px; animation: dangleR 3.2s ease-in-out infinite; }

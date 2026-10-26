@@ -105,10 +105,10 @@
   function gaze(mx, my) {
     const r = svg.getBoundingClientRect();
     const k = r.width / 260;
-    const ex = r.left + 135 * k, ey = r.top + 126 * k;
+    const ex = r.left + 131 * k, ey = r.top + 132.4 * k;
     const dx = mx - ex, dy = my - ey;
     const d = Math.hypot(dx, dy) || 1;
-    const m = Math.min(1, d / 160) * 1.25;
+    const m = Math.min(1, d / 160) * 0.22; // 眼睛组的单位是绿环半径
     const t = `translate(${(dx / d * m).toFixed(2)}px, ${(dy / d * m).toFixed(2)}px)`;
     pupils.forEach(p => { p.style.transform = t; });
   }
