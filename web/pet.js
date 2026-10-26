@@ -61,22 +61,54 @@
   for (let i = 0; i < 260; i++) splat(fine, Math.random() * 36, Math.random() * 36, 0.1 + Math.random() * 0.28);
 
   // ---------- 状态 ----------
-  // 持续状态：idle / sleep / drag / move-left / move-right；瞬时状态：happy / spin
+  // 持续状态：idle / sleep / drag / move-left / move-right；
+  // 瞬时状态（flash）：happy / spin / arrive-* / land / zap-out / zap-in
+  const FLASHES = ['happy', 'spin', 'arrive-left', 'arrive-right', 'land', 'zap-out', 'zap-in'];
   let state = 'idle';
   let flashTimer = null;
 
   function setState(s) {
+    const prev = state;
     root.classList.remove('idle', 'sleep', 'drag', 'move-left', 'move-right');
     state = s;
     root.classList.add(s);
+    // 走着走着停下：惯性往前冲一下再站稳
+    if (s === 'idle' && prev.startsWith('move-')) flash(prev.replace('move', 'arrive'), 900);
   }
 
   function flash(cls, ms) {
-    root.classList.remove('happy', 'spin');
+    root.classList.remove(...FLASHES);
     void root.offsetWidth; // 重新触发 CSS 动画
     root.classList.add(cls);
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => root.classList.remove(cls), ms);
+  }
+
+  // ---------- 电流 ----------
+  // 身上随机的锯齿电弧：两组交替闪，每次化成电流都重新生成
+  const zapGroups = document.querySelectorAll('#zapsvg g');
+  function seedArcs() {
+    zapGroups.forEach(g => {
+      g.replaceChildren();
+      for (let i = 0; i < 4; i++) {
+        let x = 100 + Math.random() * 62, y = 130 + Math.random() * 400;
+        const pts = [[x, y]];
+        for (let k = 0; k < 5 + Math.random() * 4; k++) {
+          const a = Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+          const len = 8 + Math.random() * 12;
+          x += Math.cos(a) * len * (Math.random() < 0.5 ? -1 : 1);
+          y += Math.sin(a) * len * (Math.random() < 0.5 ? -1 : 1);
+          pts.push([x, y]);
+        }
+        const str = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+        for (const cls of ['zap-glow', 'zap-core']) {
+          const l = document.createElementNS(SVG_NS, 'polyline');
+          l.setAttribute('points', str);
+          l.setAttribute('class', cls);
+          g.appendChild(l);
+        }
+      }
+    });
   }
 
   // ---------- 说话 ----------
@@ -136,6 +168,7 @@
     if (!down || down.dragging) return;
     if (Math.hypot(e.screenX - down.x, e.screenY - down.y) > 4) {
       down.dragging = true;
+      root.classList.remove(...FLASHES); // 化成电流途中被抓住也要立刻现形
       setState('drag');
       sayRandom('drag');
       post({ type: 'dragStart' });
@@ -172,7 +205,9 @@
     tick(mx, my) { gaze(mx, my); return hit(mx, my); },
     setState(s) { if (s !== state) setState(s); },
     getState() { return state; },
-    dropped() { if (state === 'drag') { setState('idle'); sayRandom('drop'); } },
+    dropped() { if (state === 'drag') { setState('idle'); flash('land', 700); sayRandom('drop'); } },
+    zapOut() { setState('idle'); seedArcs(); flash('zap-out', 5000); },
+    zapIn() { seedArcs(); flash('zap-in', 480); },
     sleep() { setState('sleep'); sayRandom('sleep'); },
     wake() { if (state === 'sleep') { setState('idle'); sayRandom('wake'); } },
     talk() { flash('happy', 900); sayRandom('idle'); },

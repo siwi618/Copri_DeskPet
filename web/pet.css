@@ -75,8 +75,9 @@ html, body {
 #shadow { transform-origin: 131px 556px; animation: shadow 3.2s ease-in-out infinite; }
 #hairwrap { transform-origin: 131px 235px; animation: flicker 3.6s ease-in-out infinite; }
 #bangs { transform-origin: 131px 106px; }
-#head { transform-origin: 131px 144px; transition: transform .25s; }
-.limb { transition: transform .3s; }
+/* 状态切换用带回弹的缓动：先冲过头一点再落回来，不再是线性硬切 */
+#head { transform-origin: 131px 144px; transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
+.limb { transition: transform .45s cubic-bezier(.34, 1.56, .64, 1); }
 .p-legL { transform-origin: 121px 262px; }
 .p-legR { transform-origin: 141px 262px; }
 .p-armL { transform-origin: 109px 174px; }
@@ -107,11 +108,26 @@ html, body {
 /* 开心：咧嘴 + 蹦跳 */
 .happy .m-neutral { display: none; }
 .happy .m-happy { display: inline; }
-.happy #pet { animation: hop .45s ease-out 2; }
+.happy #pet { animation: hop .9s linear; }
+.happy #hairwrap { animation: hairHop .9s .08s ease-out both; }
 .happy .p-armL { transform: rotate(22deg); }
 .happy .p-armR { transform: rotate(-168deg); }
 .happy #hearts { display: inline; }
-@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px); } }
+@keyframes hop {
+  0% { transform: none; animation-timing-function: ease-out; }
+  14% { transform: translateY(5px) scale(1.04, .94); animation-timing-function: cubic-bezier(.2, .7, .4, 1); }
+  42% { transform: translateY(-20px) scale(.96, 1.05); animation-timing-function: cubic-bezier(.6, 0, .8, .4); }
+  62% { transform: translateY(3px) scale(1.06, .93); animation-timing-function: ease-out; }
+  80% { transform: translateY(-2px) scale(.98, 1.02); }
+  100% { transform: none; }
+}
+@keyframes hairHop {
+  0% { transform: none; }
+  20% { transform: translateY(-4px) scaleY(1.04); }
+  48% { transform: translateY(6px) scaleY(.95); }
+  70% { transform: translateY(-3px) scaleY(1.02); }
+  100% { transform: rotate(-1.2deg); }
+}
 
 /* 被拎起来：吃惊，手脚乱晃 */
 .drag .m-neutral { display: none; }
@@ -141,13 +157,100 @@ html, body {
 @keyframes zfloat { 0% { opacity: 0; transform: translateY(8px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
 #hearts text { font: 900 24px/1 "Avenir Next", sans-serif; fill: var(--green); stroke: var(--ink); stroke-width: 1.5; }
 
-/* 移动：身体朝前进方向倾斜，长发往后飘 */
-.move-left #pet { animation: none; transform: rotate(-6deg); transition: transform .4s; }
-.move-right #pet { animation: none; transform: rotate(6deg); transition: transform .4s; }
-.move-left #hairwrap { animation: none; transform: rotate(4deg) translateX(6px); }
-.move-right #hairwrap { animation: none; transform: rotate(-4deg) translateX(-6px); }
-.move-left #head { transform: translateX(-3px); }
-.move-right #head { transform: translateX(3px); }
+/* 走路（短距离）：--dir 1 往左、-1 往右。起步先蹲一下蓄力（prep），然后一步一颠：
+   两腿交替抬起（以胯为轴缩短 = 屈膝抬脚）往前迈，胯跟着左右扭，手臂和腿反向摆，
+   头发往后拖、比身体慢半拍；停下时身体往前冲一下再回弹（arrive） */
+.move-left { --dir: 1; }
+.move-right { --dir: -1; }
+.move-left #pet, .move-right #pet { animation: prep .2s ease-out, walk .64s .2s linear infinite; }
+.move-left .p-legL, .move-right .p-legR { animation: stepA .64s .2s ease-in-out infinite; }
+.move-left .p-legR, .move-right .p-legL { animation: stepB .64s .2s ease-in-out infinite; }
+.move-left .p-armL, .move-right .p-armR { animation: armSwing .64s .2s ease-in-out infinite; }
+.move-left .p-armR, .move-right .p-armL { animation: armSwing .64s .52s ease-in-out infinite; }
+.move-left #hairwrap, .move-right #hairwrap { animation: hairWalk .32s .1s ease-in-out infinite; }
+.move-left #head { transform: translateX(-3px) rotate(-2deg); }
+.move-right #head { transform: translateX(3px) rotate(2deg); }
+@keyframes prep { to { transform: translateY(4px) scale(1.03, .96); } }
+@keyframes walk {
+  0%, 100% { transform: rotate(calc(var(--dir) * -6deg)); }
+  25% { transform: rotate(calc(var(--dir) * -4deg)) translateY(-6px); }
+  50% { transform: rotate(calc(var(--dir) * -2deg)); }
+  75% { transform: rotate(calc(var(--dir) * -4deg)) translateY(-6px); }
+}
+@keyframes stepA {
+  0%, 100% { transform: rotate(calc(var(--dir) * -2deg)); }
+  25% { transform: rotate(calc(var(--dir) * 1.5deg)) scaleY(.9); }
+  50% { transform: rotate(calc(var(--dir) * 3deg)); }
+  75% { transform: rotate(0deg); }
+}
+@keyframes stepB {
+  0%, 100% { transform: rotate(calc(var(--dir) * 3deg)); }
+  25% { transform: rotate(0deg); }
+  50% { transform: rotate(calc(var(--dir) * -2deg)); }
+  75% { transform: rotate(calc(var(--dir) * 1.5deg)) scaleY(.9); }
+}
+@keyframes armSwing {
+  0%, 100% { transform: rotate(calc(var(--dir) * -8deg)); }
+  50% { transform: rotate(calc(var(--dir) * 8deg)); }
+}
+@keyframes hairWalk {
+  0%, 100% { transform: rotate(calc(var(--dir) * 4deg)) translateX(calc(var(--dir) * 6px)); }
+  50% { transform: rotate(calc(var(--dir) * 5.5deg)) translateX(calc(var(--dir) * 7px)) scaleY(.98); }
+}
+
+/* 停下：惯性往前冲，再回弹两下站稳；头发甩过头再落回 */
+.arrive-left { --dir: 1; }
+.arrive-right { --dir: -1; }
+.arrive-left #pet, .arrive-right #pet { animation: arrive .8s ease-out; }
+.arrive-left #hairwrap, .arrive-right #hairwrap { animation: hairArrive .9s .06s ease-out both; }
+@keyframes arrive {
+  0% { transform: rotate(calc(var(--dir) * -4deg)); }
+  25% { transform: rotate(calc(var(--dir) * -7deg)) translateY(2px); }
+  55% { transform: rotate(calc(var(--dir) * 2deg)); }
+  80% { transform: rotate(calc(var(--dir) * -.8deg)); }
+  100% { transform: none; }
+}
+@keyframes hairArrive {
+  0% { transform: rotate(calc(var(--dir) * 5deg)) translateX(calc(var(--dir) * 6px)); }
+  35% { transform: rotate(calc(var(--dir) * -4deg)) translateX(calc(var(--dir) * -3px)); }
+  65% { transform: rotate(calc(var(--dir) * 2deg)); }
+  100% { transform: rotate(-1.2deg); }
+}
+
+/* 被放下：落地压扁再弹回，头发慢半拍 */
+.land #pet { animation: land .6s ease-out; }
+.land #hairwrap { animation: hairHop .7s .05s ease-out both; }
+@keyframes land {
+  0% { transform: translateY(-6px) scale(.97, 1.04); }
+  30% { transform: translateY(4px) scale(1.06, .93); }
+  60% { transform: translateY(-2px) scale(.98, 1.02); }
+  100% { transform: none; }
+}
+
+/* 长距离：化成一道红色电流。先蹲下蓄力，再被拉成一条细线消失（zap-out）；
+   到了以后从细线里弹出来，压扁一下再站稳（zap-in）。中间那道闪电由 Swift 用 Core Animation 画 */
+#zapsvg { display: none; }
+.zap-out #zapsvg, .zap-in #zapsvg { display: block; }
+#zapsvg g { animation: crackle .12s steps(2) infinite; }
+#zapsvg g + g { animation-delay: .06s; }
+.zap-out #pet { animation: zapOut .3s ease-in forwards; }
+.zap-in #pet { animation: zapIn .45s ease-out both; }
+.zap-out #shadow, .zap-in #shadow { animation: none; opacity: 0; }
+@keyframes zapOut {
+  0% { transform: none; opacity: 1; }
+  35% { transform: translateY(6px) scale(1.06, .9); opacity: 1; }
+  100% { transform: translateY(-24px) scale(.06, 1.25); opacity: 0; }
+}
+@keyframes zapIn {
+  0% { transform: translateY(-24px) scale(.06, 1.25); opacity: 0; }
+  40% { transform: translateY(5px) scale(1.08, .92); opacity: 1; }
+  68% { transform: translateY(-2px) scale(.97, 1.04); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes crackle { 0% { opacity: 1; } 100% { opacity: .15; } }
+#zapsvg polyline { fill: none; stroke-linejoin: miter; stroke-linecap: round; }
+#zapsvg .zap-glow { stroke: #ff2f5f; stroke-width: 5; opacity: .85; }
+#zapsvg .zap-core { stroke: #fff2f5; stroke-width: 1.8; }
 
 /* 转圈 */
 .spin #pet { animation: spin .8s cubic-bezier(.5, 0, .3, 1); }

@@ -42,6 +42,13 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
     private var lastMouseMove = Date()
     private var asleep = false
     private var facing = ""
+    // 走路：起步时间和当前速度（先蹲一下蓄力再加速，快到时减速）
+    private var walkStart: Date?
+    private var walkSpeed: CGFloat = 0
+    // 长距离化成电流：超过 zapDistance（屏幕点）就不走了，变成一道红色电流过去
+    private let zapDistance: CGFloat = 360
+    private var zapping = false
+    private var boltWindow: NSWindow?
 
     override init() {
         let s = defaults.double(forKey: "scale")
@@ -158,41 +165,208 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
     }
 
     private func updateMovement(now: Date, mouse: NSPoint) {
+        guard !zapping else { return }
         let f = panel.frame
-        let speed: CGFloat
+        let maxSpeed: CGFloat
         switch mode {
         case .stay:
             target = nil
-            speed = 0
+            maxSpeed = 0
         case .follow:
             // 飘在鼠标右下方，不挡住光标
             target = NSPoint(x: mouse.x + 24, y: mouse.y - f.height * 0.85)
-            speed = 260
+            maxSpeed = 150
         case .wander:
-            if target == nil && now > nextWander {
-                let vf = (panel.screen ?? NSScreen.main)?.visibleFrame ?? f
-                target = NSPoint(x: .random(in: vf.minX...max(vf.minX, vf.maxX - f.width)),
-                                 y: .random(in: vf.minY...max(vf.minY, vf.maxY - f.height)))
-            }
-            speed = 70
+            if target == nil && now > nextWander { target = wanderTarget(from: f) }
+            maxSpeed = 75
         }
 
-        guard let t = target else { setFacing(""); return }
+        guard let t = target else { stopWalking(); return }
         let dx = t.x - f.minX, dy = t.y - f.minY
         let dist = hypot(dx, dy)
-        let step = speed / 30
-        if dist <= max(step, 2) || (mode == .follow && dist < 40) {
-            if mode == .wander {
-                panel.setFrameOrigin(t)
-                target = nil
-                nextWander = now.addingTimeInterval(.random(in: 8...25))
-                saveOrigin()
-            }
-            setFacing("")
+        // 跟随模式留一点余量：离得近就站着，拉开一段再起步，免得原地抽动
+        if dist <= 2 || (mode == .follow && dist < (walkStart == nil ? 70 : 40)) {
+            arrived(at: t)
             return
         }
+        if dist > zapDistance {
+            zap(to: t)
+            return
+        }
+        if walkStart == nil {
+            walkStart = now
+            walkSpeed = 0
+        }
+        // 朝向看左右；几乎竖直走的时候保持原来的朝向
+        setFacing(abs(dx) < 6 ? (facing.isEmpty ? "move-right" : facing) : (dx < 0 ? "move-left" : "move-right"))
+        // 前 0.2 秒是蓄力（和 CSS 的 prep 一样长），不动
+        guard now.timeIntervalSince(walkStart!) > 0.2 else { return }
+        let accel = maxSpeed / 0.4
+        walkSpeed = min(maxSpeed, walkSpeed + accel / 30)
+        let v = max(12, min(walkSpeed, sqrt(2 * accel * dist)))
+        let step = min(dist, v / 30)
         panel.setFrameOrigin(NSPoint(x: f.minX + dx / dist * step, y: f.minY + dy / dist * step))
-        setFacing(abs(dx) < 6 ? "" : (dx < 0 ? "move-left" : "move-right"))
+    }
+
+    private func arrived(at t: NSPoint) {
+        if mode == .wander {
+            panel.setFrameOrigin(t)
+            target = nil
+            nextWander = Date().addingTimeInterval(.random(in: 8...25))
+            saveOrigin()
+        }
+        stopWalking()
+    }
+
+    private func stopWalking() {
+        walkStart = nil
+        walkSpeed = 0
+        setFacing("")
+    }
+
+    // 游荡目的地：多数是附近走得到的地方，偶尔去屏幕另一头（化成电流过去）
+    private func wanderTarget(from f: NSRect) -> NSPoint {
+        let vf = (panel.screen ?? NSScreen.main)?.visibleFrame ?? f
+        let maxX = max(vf.minX, vf.maxX - f.width), maxY = max(vf.minY, vf.maxY - f.height)
+        if Double.random(in: 0..<1) < 0.65 {
+            let a = CGFloat.random(in: 0..<(2 * .pi)), r = CGFloat.random(in: 120...300)
+            return NSPoint(x: min(max(f.minX + cos(a) * r, vf.minX), maxX),
+                           y: min(max(f.minY + sin(a) * r * 0.5, vf.minY), maxY))
+        }
+        return NSPoint(x: .random(in: vf.minX...maxX), y: .random(in: vf.minY...maxY))
+    }
+
+    // MARK: - 化成电流
+
+    private func zap(to t: NSPoint) {
+        zapping = true
+        walkStart = nil
+        walkSpeed = 0
+        facing = ""
+        js("copri.zapOut()")
+        let from = panel.frame
+        // 等身体被拉成细线消失，再放出闪电
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self else { return }
+            if self.dragging { self.zapping = false; return }
+            self.panel.alphaValue = 0
+            let to = NSRect(origin: t, size: from.size)
+            self.showBolt(from: self.bodyCenter(from), to: self.bodyCenter(to)) {
+                if !self.dragging { self.panel.setFrameOrigin(t) }
+                self.panel.alphaValue = 1
+                self.js("copri.zapIn()")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.48) {
+                    self.zapping = false
+                    if self.mode == .wander {
+                        self.target = nil
+                        self.nextWander = Date().addingTimeInterval(.random(in: 8...25))
+                    }
+                    self.saveOrigin()
+                }
+            }
+        }
+    }
+
+    // 网页坐标里身体中心约在 (131, 360)
+    private func bodyCenter(_ f: NSRect) -> NSPoint {
+        NSPoint(x: f.minX + 131 * scale, y: f.maxY - 360 * scale)
+    }
+
+    // 一道锯齿状的红色电流：头先冲到终点、尾巴随后跟上，路径不停抖动。
+    // 用 Core Animation 在一个临时的透明窗口里画，全程由 GPU 合成，几乎不占 CPU
+    private func showBolt(from a: NSPoint, to b: NSPoint, done: @escaping () -> Void) {
+        let pad: CGFloat = 40
+        let rect = NSRect(x: min(a.x, b.x) - pad, y: min(a.y, b.y) - pad,
+                          width: abs(a.x - b.x) + pad * 2, height: abs(a.y - b.y) + pad * 2)
+        let w = NSWindow(contentRect: rect, styleMask: .borderless, backing: .buffered, defer: false)
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.hasShadow = false
+        w.level = .floating
+        w.ignoresMouseEvents = true
+        w.isReleasedWhenClosed = false
+        w.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        let view = NSView(frame: NSRect(origin: .zero, size: rect.size))
+        view.wantsLayer = true
+        w.contentView = view
+
+        let p0 = CGPoint(x: a.x - rect.minX, y: a.y - rect.minY)
+        let p1 = CGPoint(x: b.x - rect.minX, y: b.y - rect.minY)
+        // 主电流 + 两股更细的电丝，各自抖动，看起来噼啪作响
+        let mainPaths = (0..<4).map { _ in Self.boltPath(from: p0, to: p1, amp: 26) }
+        let duration = min(0.55, 0.28 + Double(hypot(p1.x - p0.x, p1.y - p0.y)) / 5000)
+        let red = CGColor(red: 0.89, green: 0.19, blue: 0.31, alpha: 1)
+        let pink = CGColor(red: 1, green: 0.42, blue: 0.6, alpha: 1)
+        let strands: [(CGFloat, CGColor, Float, Bool, [CGPath])] = [
+            (18, pink, 0.3, true, mainPaths), (7, red, 1, true, mainPaths), (2.4, .white, 0.95, false, mainPaths),
+            (2, pink, 0.9, true, (0..<4).map { _ in Self.boltPath(from: p0, to: p1, amp: 34) }),
+            (1.6, red, 0.9, true, (0..<4).map { _ in Self.boltPath(from: p0, to: p1, amp: 40) }),
+        ]
+
+        CATransaction.begin()
+        CATransaction.setCompletionBlock { [weak self] in
+            w.orderOut(nil)
+            self?.boltWindow = nil
+            done()
+        }
+        for (width, color, alpha, glow, paths) in strands {
+            let l = CAShapeLayer()
+            l.frame = view.bounds
+            l.path = paths[0]
+            l.fillColor = nil
+            l.strokeColor = color
+            l.lineWidth = width
+            l.opacity = alpha
+            l.lineJoin = .miter
+            l.lineCap = .round
+            // 动画结束后的状态：整条已经流走
+            l.strokeStart = 1
+            l.strokeEnd = 1
+            if glow {
+                l.shadowColor = red
+                l.shadowRadius = 10
+                l.shadowOpacity = 1
+                l.shadowOffset = .zero
+            }
+            view.layer?.addSublayer(l)
+            let head = CAKeyframeAnimation(keyPath: "strokeEnd")
+            head.values = [0, 1, 1]
+            head.keyTimes = [0, 0.6, 1]
+            head.duration = duration
+            let tail = CAKeyframeAnimation(keyPath: "strokeStart")
+            tail.values = [0, 0, 1]
+            tail.keyTimes = [0, 0.45, 1]
+            tail.duration = duration
+            let jitter = CAKeyframeAnimation(keyPath: "path")
+            jitter.values = paths
+            jitter.calculationMode = .discrete
+            jitter.duration = 0.16
+            jitter.repeatCount = .infinity
+            let group = CAAnimationGroup()
+            group.animations = [head, tail, jitter]
+            group.duration = duration
+            l.add(group, forKey: "bolt")
+        }
+        CATransaction.commit()
+        w.orderFrontRegardless()
+        boltWindow = w
+    }
+
+    private static func boltPath(from a: CGPoint, to b: CGPoint, amp maxAmp: CGFloat) -> CGPath {
+        let path = CGMutablePath()
+        let dx = b.x - a.x, dy = b.y - a.y
+        let len = max(1, hypot(dx, dy))
+        let nx = -dy / len, ny = dx / len
+        let n = max(5, Int(len / 22))
+        let amp = min(maxAmp, len * 0.07)
+        path.move(to: a)
+        for i in 1..<n {
+            let t = CGFloat(i) / CGFloat(n)
+            let off = CGFloat.random(in: -amp...amp)
+            path.addLine(to: CGPoint(x: a.x + dx * t + nx * off, y: a.y + dy * t + ny * off))
+        }
+        path.addLine(to: b)
+        return path
     }
 
     private func setFacing(_ s: String) {
@@ -229,6 +403,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
             dragging = true
             target = nil
             facing = ""
+            walkStart = nil
+            walkSpeed = 0
             let m = NSEvent.mouseLocation
             dragOffset = NSPoint(x: m.x - panel.frame.minX, y: m.y - panel.frame.minY)
         case "interact":
