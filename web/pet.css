@@ -77,10 +77,10 @@ html, body {
 #bangs { transform-origin: 131px 106px; }
 #head { transform-origin: 131px 144px; transition: transform .25s; }
 .limb { transition: transform .3s; }
-#legL { transform-origin: 121px 262px; }
-#legR { transform-origin: 141px 262px; }
-#armL { transform-origin: 109px 174px; }
-#armR { transform-origin: 153px 174px; }
+.p-legL { transform-origin: 121px 262px; }
+.p-legR { transform-origin: 141px 262px; }
+.p-armL { transform-origin: 109px 174px; }
+.p-armR { transform-origin: 153px 174px; }
 /* 身体那层待机时不做动画（否则每帧重画整张脸）；碎片整层飘 */
 #shardsvg { animation: drift 5s ease-in-out infinite; will-change: transform; }
 
@@ -108,8 +108,8 @@ html, body {
 .happy .m-neutral { display: none; }
 .happy .m-happy { display: inline; }
 .happy #pet { animation: hop .45s ease-out 2; }
-.happy #armL { transform: rotate(22deg); }
-.happy #armR { transform: rotate(-168deg); }
+.happy .p-armL { transform: rotate(22deg); }
+.happy .p-armR { transform: rotate(-168deg); }
 .happy #hearts { display: inline; }
 @keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px); } }
 
@@ -117,10 +117,10 @@ html, body {
 .drag .m-neutral { display: none; }
 .drag .m-shock { display: inline; }
 .drag #pet { animation: wobble .5s ease-in-out infinite; }
-.drag #armL { transform: rotate(150deg); }
-.drag #armR { transform: rotate(-150deg); }
-.drag #legL { animation: kickL .25s ease-in-out infinite; }
-.drag #legR { animation: kickR .25s ease-in-out infinite; }
+.drag .p-armL { transform: rotate(150deg); }
+.drag .p-armR { transform: rotate(-150deg); }
+.drag .p-legL { animation: kickL .25s ease-in-out infinite; }
+.drag .p-legR { animation: kickR .25s ease-in-out infinite; }
 .drag #shadow { opacity: 0; }
 @keyframes wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 @keyframes kickL { 0%, 100% { transform: rotate(9deg); } 50% { transform: rotate(-6deg); } }
