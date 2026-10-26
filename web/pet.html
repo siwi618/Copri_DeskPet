@@ -11,13 +11,22 @@
 
   <!-- 分层：头发、闪烁的闪粉、身体各是一个 SVG。头发画一次就不再重绘，
        漂浮/摇曳/闪烁都是对整层做 transform/opacity，交给 GPU 合成，不用每帧重画几千个闪粉 -->
-  <svg id="shadowsvg" class="layer" viewBox="0 0 260 470" xmlns="http://www.w3.org/2000/svg">
-    <g id="shadow"><ellipse cx="135" cy="466" rx="30" ry="4"/></g>
+  <svg id="shadowsvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
+    <g id="shadow"><ellipse cx="131" cy="556" rx="26" ry="3.5"/></g>
   </svg>
 
   <div id="pet">
+    <!-- 漂浮的绿色碎片：单独一层，整层飘动 -->
+    <svg id="shardsvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
+      <g id="shards">
+        <polygon class="shard" points="30,280 36,274 24,350 18,356"/>
+        <polygon class="shard" points="44,330 48,326 42,376 37,380"/>
+        <polygon class="shard" points="226,240 231,236 226,300 221,304"/>
+      </g>
+    </svg>
+
     <div id="hairwrap">
-      <svg id="hairsvg" class="layer" viewBox="0 0 260 470" xmlns="http://www.w3.org/2000/svg">
+      <svg id="hairsvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <!-- redGlit：红底泼墨闪粉，用在身上的红色部分（墨点由 pet.js 生成） -->
           <pattern id="redGlit" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#e43050"/></pattern>
@@ -33,28 +42,32 @@
 
           <!-- 轮廓形状：不带 class，方便 <use> 上色（紫色描边层和本体共用） -->
           <path id="hairShape" fill-rule="evenodd" clip-rule="evenodd" d="M96.1,-49.0 L98.5,-47.1 L99.0,-38.9 L91.3,-38.0 L68.9,-13.1 L65.5,-11.2 L64.6,-6.9 L59.3,-3.6 L59.3,-0.7 L62.7,2.6 L65.1,2.2 L65.5,-3.6 L71.3,1.2 L74.1,1.2 L107.6,-10.7 L139.1,-19.8 L144.4,-22.7 L144.4,-26.5 L147.2,-32.2 L155.4,-31.8 L176.4,-39.9 L175.4,-36.1 L169.2,-35.1 L154.4,-21.7 L155.4,-18.9 L159.7,-18.9 L162.5,-22.2 L169.2,-24.6 L169.2,-22.7 L159.7,-14.1 L157.8,-12.7 L144.4,-11.2 L124.8,5.5 L119.5,8.4 L108.1,19.4 L108.5,21.7 L113.8,20.8 L118.6,22.2 L117.6,27.0 L112.8,33.2 L113.3,35.6 L118.6,32.7 L119.1,28.4 L125.7,28.4 L129.1,17.4 L127.7,14.6 L128.6,12.7 L146.3,10.8 L159.7,-0.2 L160.6,-7.4 L162.5,-6.4 L161.6,6.5 L164.0,6.9 L175.4,0.2 L179.3,-6.4 L195.0,-12.7 L211.7,-17.4 L212.7,-10.7 L221.8,-12.2 L229.9,-39.9 L229.4,-44.2 L231.8,-43.7 L229.9,-27.0 L231.3,-13.1 L228.0,15.5 L228.9,20.8 L225.6,23.7 L225.1,15.1 L222.3,5.0 L216.0,6.0 L210.3,8.8 L204.6,77.2 L207.4,77.6 L224.2,70.5 L226.1,65.2 L229.4,70.0 L229.9,83.4 L233.2,83.9 L234.7,81.0 L236.6,49.9 L238.5,50.4 L239.0,94.4 L234.2,95.8 L233.2,97.7 L232.8,114.4 L233.2,119.7 L237.1,122.6 L238.0,131.6 L241.4,130.2 L243.8,118.7 L245.7,118.3 L245.7,148.4 L244.2,148.4 L239.0,135.5 L228.9,134.5 L219.4,138.3 L215.6,141.7 L215.1,168.9 L213.2,168.4 L213.2,156.0 L208.4,151.7 L202.7,117.3 L200.8,117.3 L196.0,123.5 L194.5,131.2 L191.2,134.5 L188.3,134.0 L186.9,129.7 L181.2,124.9 L175.0,127.8 L175.9,130.7 L184.0,135.9 L179.7,135.9 L169.7,142.1 L169.2,145.5 L180.2,159.3 L154.4,136.4 L151.1,135.9 L141.0,141.2 L147.2,135.5 L175.9,120.2 L175.9,118.3 L173.5,117.8 L152.5,124.0 L157.8,117.8 L157.8,115.9 L155.4,114.0 L158.2,107.3 L155.8,106.8 L148.2,111.1 L152.0,98.7 L152.0,96.8 L149.6,96.3 L127.2,128.8 L126.2,126.9 L128.1,116.8 L125.7,116.3 L109.5,132.6 L103.3,136.4 L106.2,121.6 L106.2,119.7 L103.8,119.2 L86.1,144.5 L81.3,148.4 L82.3,140.2 L73.2,94.4 L71.3,94.4 L63.6,101.5 L34.5,120.2 L32.6,124.9 L35.9,126.9 L29.7,133.1 L29.7,135.9 L11.6,134.0 L11.6,132.1 L21.1,130.2 L47.4,102.5 L46.9,100.1 L44.5,100.1 L27.3,109.2 L23.0,109.2 L14.4,113.0 L8.2,118.3 L13.5,110.1 L13.5,105.4 L8.2,71.9 L6.8,70.5 L2.0,71.9 L2.0,70.5 L12.0,55.2 L17.8,56.1 L30.2,45.2 L30.2,42.8 L27.3,39.9 L16.8,16.5 L12.0,12.2 L22.1,11.7 L24.0,17.0 L25.4,17.4 L28.8,33.7 L32.1,42.3 L36.9,39.9 L42.6,40.9 L42.6,33.7 L36.9,25.6 L28.8,19.4 L32.1,-2.1 L37.8,-1.7 L38.3,-5.0 L50.3,-15.5 L88.0,-43.7 L93.7,-43.7 Z M196.9,13.1 L203.1,15.5 L203.6,19.4 L185.9,68.6 L185.5,83.9 L185.0,85.3 L182.1,84.8 L179.7,83.9 L182.1,78.6 L182.6,69.5 L183.1,44.7 L181.2,39.9 L187.9,38.5 L195.0,25.1 Z M173.5,35.6 L175.4,35.6 L175.9,39.4 L178.3,40.4 L178.3,42.8 L171.1,45.2 L166.8,47.1 L164.4,47.1 L164.4,45.2 Z"/>
-          <polygon id="torsoShape" points="106,166 156,166 157,176 153,192 146,206 140,222 146,236 154,250 150,262 131,268 112,262 108,250 116,236 122,222 116,206 109,192 105,176"/>
-          <polygon id="legLShape" points="109,250 128,264 126,300 122,340 123,410 120,440 117,464 114,440 113,410 110,340 106,292"/>
-          <polygon id="legRShape" points="153,250 156,292 152,340 150,408 154,436 156,462 146,440 140,410 140,342 136,300 134,264"/>
-          <polygon id="armLShape" points="106,168 93,226 86,280 80,300 85,291 84,309 88,293 90,307 91,291 95,301 92,282 100,228 114,175"/>
-          <polygon id="armRShape" points="156,168 169,226 176,280 182,300 177,291 178,309 174,293 172,307 171,291 167,301 170,282 162,228 148,175"/>
+          <polygon id="torsoShape" points="110,170 152,170 155,178 151,196 146,214 142,236 146,256 151,282 145,296 131,302 117,296 111,282 116,256 120,236 116,214 111,196 107,178"/>
+          <polygon id="legLShape" points="112,280 131,298 128,330 125,380 124,420 122,470 120,520 117,552 114,520 112,470 111,420 109,380 107,330"/>
+          <polygon id="legRShape" points="150,280 155,330 153,380 151,420 150,470 148,520 145,552 142,520 140,470 138,420 137,380 134,330 131,298"/>
+          <polygon id="armLShape" points="107,170 115,178 108,212 104,252 102,290 101,322 104,330 103,350 100,334 98,352 96,334 93,348 93,330 95,322 95,290 96,252 99,212"/>
+          <polygon id="armRShape" points="155,170 147,178 154,212 158,252 160,290 161,322 158,330 159,350 162,334 164,352 166,334 169,348 169,330 167,322 167,290 166,252 163,212"/>
           <!-- 头：按 face 文件夹正脸特写（12.51.18 等）测量。面罩两侧就是脸的两侧，往下收窄，下巴是偏左的 V 形 -->
           <path id="headShape" d="M107,104 L155,104 L152.9,115.5 L147.5,133 L146,138.6 L128,146.8 L115,139.6 L114.5,133 L109.1,115.5 Z"/>
           <polygon id="bangsShape" points="104,94 158,94 157,111.6 152.6,114.4 148,111.4 143,114.6 137.4,111.8 131.6,112.6 123.9,129.9 128.4,112.9 121,114.6 116.2,111.6 111.4,114.4 106,111.8"/>
           <clipPath id="bangsClip"><use href="#bangsShape"/></clipPath>
 
+          <path id="crownShape" d="M110,124 L103.3,126.6 L77,113.5 L79.4,119.4 L55.5,123 L57.9,126.6 L36.4,129 L22.1,137.8 L30.4,137.8 L55.5,131.4 L53.1,134.5 L81.8,129 L79.4,132.6 L103.3,135 L112,134 Z M118,124 L112.8,93 L126,118 Z M134,118 L151,92 L142,121 Z M146,122 L160.6,101.5 L151,127 Z M148,129 L166,136 L163,138.5 L176,147 L160,141 L146,136 Z"/>
           <clipPath id="hairClip"><use href="#hairShape"/></clipPath>
+          <clipPath id="torsoClip"><use href="#torsoShape"/></clipPath>
           <clipPath id="headClip"><use href="#headShape"/></clipPath>
         </defs>
 
 
         <!-- 头发（后层）：轮廓从原图 general/08.29.28 自动描出（红色部分，含发束间的缝隙），按脸的位置对齐缩放 -->
-        <g id="hair">
+        <g id="hair" transform="translate(0,10)">
           <use href="#hairShape" class="hair-ol" transform="translate(-3.2,3.6)"/>
           <!-- 底部细黑边：黑色同形状往下错开一点，只在朝下的边缘露出来 -->
           <use href="#hairShape" class="ink" transform="translate(0,2.2)"/>
-          <!-- 头后面一圈细黑发尖（头发的暗面），只从脸周围的缺口里露出来，照 08.29.28 -->
-          <polygon class="ink" id="crown" points="131,128 112,133 58,152 110,138.5 113,124 90,111 115,120 121,117 111,98 126,115 132,115 137,94 139.5,115 144,116 158,99 148.5,120 151,122.5 178,117 152,128.5 150,133 174,148 147.5,137"/>
+          <!-- 头发暗面：头后面压在红发下面的黑色闪电发束，只从红发底下露出来（照 08.29.28 底部，坐标按原图换算）：
+               左下一大束台阶状黑发、右下一小束、脸后几根朝上的黑尖，同样带紫色错位描边 -->
+          <use href="#crownShape" class="hair-ol" transform="translate(-2.4,2.6)"/>
+          <use href="#crownShape" class="ink"/>
           <use href="#hairShape" class="hair-fill"/>
           <rect x="0" y="-60" width="260" height="240" fill="url(#hazeGrad)" clip-path="url(#hairClip)"/>
           <rect class="glitter" x="0" y="-60" width="260" height="240" fill="url(#fineGlit)" clip-path="url(#hairClip)" mask="url(#topFade)"/>
@@ -62,61 +75,61 @@
         </g>
       </svg>
       <!-- 会闪的那层闪粉单独一层，只改透明度 -->
-      <svg id="twinkle" class="layer" viewBox="0 0 260 470" xmlns="http://www.w3.org/2000/svg">
-        <g class="glitter" clip-path="url(#hairClip)" id="splatB"></g>
+      <svg id="twinkle" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(0,10)"><g class="glitter" clip-path="url(#hairClip)" id="splatB"></g></g>
       </svg>
     </div>
 
-    <svg id="copri" class="layer" viewBox="0 0 260 470" xmlns="http://www.w3.org/2000/svg">
-        <!-- 漂浮的绿色碎片 -->
-        <g id="shards">
-          <polygon class="shard s1" points="30,280 36,274 24,350 18,356"/>
-          <polygon class="shard s2" points="44,330 48,326 42,376 37,380"/>
-          <polygon class="shard s3" points="226,240 231,236 226,300 221,304"/>
-        </g>
+    <svg id="copri" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
 
-        <!-- 身体 -->
+        <!-- 身体：照 08.25.42 正面、07.47.01 全身。黑底；躯干中间一大块红闪粉，
+             腰两侧黑色闪电台阶往里收成沙漏，下面黑色 X 交叉，X 左边一小块绿；
+             领口左边一小块绿、右边两道黑短杠。左腿黑、右腿红，脚尖收成尖 -->
         <g id="body">
           <g id="legL" class="limb">
             <use href="#legLShape" class="ol" transform="translate(-2.5,2.5)"/>
             <use href="#legLShape" class="ink"/>
-            <polygon class="green" points="110,268 122,272 118,296 110,290"/>
-            <polygon class="red" points="114,350 118,350 120,412 117,412"/>
+            <polygon class="green" points="111,292 120,296 117,318 110,312"/>
           </g>
           <g id="legR" class="limb">
             <use href="#legRShape" class="ol" transform="translate(-2.5,2.5)"/>
             <use href="#legRShape" class="glit"/>
-            <polygon class="ink" points="146,330 150,340 146,352 142,340"/>
-            <polygon class="ink" points="136,268 146,262 140,290"/>
           </g>
-          <rect class="ink" x="125.6" y="146" width="5" height="22"/>
+          <rect class="ink" x="128.5" y="158" width="5" height="16"/>
           <use href="#torsoShape" class="ol" transform="translate(-2.5,2.5)"/>
           <use href="#torsoShape" class="ink"/>
-          <polygon class="green" points="106,166 128,166 120,186 109,192 105,176"/>
-          <polygon class="glit" points="130,170 156,166 157,176 153,192 144,200 134,194 130,182"/>
-          <polygon class="ink" points="140,176 146,182 142,190 137,183"/>
-          <polygon class="glit" points="129,200 136,204 134,222 129,222"/>
-          <polygon class="glit" points="140,222 146,236 154,250 150,262 140,264 146,244"/>
-          <polygon class="green" points="108,250 120,256 112,268"/>
-          <polygon class="red" points="112,244 152,252 152,255 112,247"/>
+          <g clip-path="url(#torsoClip)">
+            <polygon class="glit" points="123,180 140,177 145,186 145,206 143,230 145,252 147,274 143,292 131,298 119,292 116,276 118,252 119,230 117,206 117,188"/>
+            <!-- 腰两侧的黑色闪电台阶 -->
+            <polygon class="ink" points="113,212 123,214 128,226 122,226 128,240 119,232 113,236"/>
+            <polygon class="ink" points="149,212 139,214 135,226 141,226 134,240 143,232 149,236"/>
+            <!-- 下腹黑色 X -->
+            <polygon class="ink" points="117,250 120,248 147,292 144,294"/>
+            <polygon class="ink" points="145,250 148,252 121,296 118,294"/>
+            <polygon class="green" points="115,266 120,260 125,268 119,275"/>
+            <!-- 领口 -->
+            <polygon class="green" points="121,178 126,177 126,182 121,183"/>
+            <polygon class="ink" points="134,180 142,178.5 142,180.3 134,181.8"/>
+            <polygon class="ink" points="134,185 141,183.5 141,185.3 134,186.8"/>
+          </g>
         </g>
 
-        <!-- 手臂 -->
+        <!-- 手臂：贴着身体垂到大腿中部，手指细长。左臂黑、上臂一块竖着的绿；右臂红、手肘一块黑三角 -->
         <g id="arms">
           <g id="armL" class="limb">
             <use href="#armLShape" class="ol" transform="translate(-2.5,2.5)"/>
             <use href="#armLShape" class="ink"/>
-            <polygon class="green" points="107,172 113,176 108,196 103,190"/>
+            <polygon class="green" points="107,171 114,177 109,206 101,204 100,212"/>
           </g>
           <g id="armR" class="limb">
             <use href="#armRShape" class="ol" transform="translate(-2.5,2.5)"/>
-            <use href="#armRShape" class="ink"/>
-            <polygon class="glit" points="164,232 169,228 175,278 170,282"/>
+            <use href="#armRShape" class="glit"/>
+            <polygon class="ink" points="155,238 164,234 160,262"/>
           </g>
         </g>
 
         <!-- 脸（外层只负责定位，#head 自己的 transform 留给 CSS 状态动画） -->
-        <g transform="translate(0,6)">
+        <g transform="translate(0,16)">
         <g id="head">
           <use href="#headShape" class="ol" transform="translate(-1.5,1.5)"/>
           <use href="#headShape" class="ink"/>
@@ -156,13 +169,16 @@
           <g id="bangs">
             <g clip-path="url(#headClip)"><use href="#bangsShape" class="ink" transform="translate(0,1.2)"/></g>
             <use href="#bangsShape" class="hair-fill"/>
+            <!-- 和头发同样的白光、细闪粉，不然刘海看着是一块平的红 -->
+            <rect x="100" y="88" width="62" height="48" fill="url(#hazeGrad)" clip-path="url(#bangsClip)"/>
+            <rect class="glitter" x="100" y="88" width="62" height="48" fill="url(#fineGlit)" opacity=".5" clip-path="url(#bangsClip)"/>
             <g class="glitter" clip-path="url(#bangsClip)" id="splatBangs"></g>
           </g>
         </g>
         </g>
 
-        <g id="zzz"><text x="150" y="112">z</text><text x="162" y="96">z</text><text x="176" y="78">Z</text></g>
-        <g id="hearts"><text x="80" y="92">!</text><text x="182" y="84">✦</text></g>
+        <g id="zzz"><text x="150" y="122">z</text><text x="162" y="106">z</text><text x="176" y="88">Z</text></g>
+        <g id="hearts"><text x="80" y="102">!</text><text x="182" y="94">✦</text></g>
     </svg>
   </div>
 </div>

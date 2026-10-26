@@ -15,7 +15,7 @@ final class PetWebView: WKWebView {
 }
 
 final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
-    private let baseSize = NSSize(width: 260, height: 530)
+    private let baseSize = NSSize(width: 260, height: 620)
     private let defaults = UserDefaults.standard
 
     private var panel: NSPanel!

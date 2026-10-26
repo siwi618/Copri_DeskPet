@@ -19,7 +19,7 @@ html, body {
 #stage {
   position: relative;
   width: 260px;
-  height: 530px;
+  height: 620px;
 }
 
 /* 每一层 SVG 叠在同一位置；SVG 根节点不接鼠标，只有画到的图形接（点击穿透靠这个） */
@@ -28,7 +28,7 @@ html, body {
   left: 0;
   top: 60px;
   width: 260px;
-  height: 470px;
+  height: 560px;
   overflow: visible;
   pointer-events: none;
 }
@@ -38,7 +38,7 @@ html, body {
   left: 0;
   top: 0;
   width: 260px;
-  height: 530px;
+  height: 620px;
   pointer-events: none;
   will-change: transform;
 }
@@ -70,19 +70,18 @@ html, body {
 }
 
 /* ---------- 基础动作 ---------- */
-#pet { transform-origin: 131px 360px; animation: float 3.2s ease-in-out infinite; }
-#shadow { transform-origin: 135px 466px; animation: shadow 3.2s ease-in-out infinite; }
+#pet { transform-origin: 131px 400px; animation: float 3.2s ease-in-out infinite; }
+#shadow { transform-origin: 131px 556px; animation: shadow 3.2s ease-in-out infinite; }
 #hairwrap { transform-origin: 131px 235px; animation: flicker 3.6s ease-in-out infinite; }
 #bangs { transform-origin: 131px 106px; }
 #head { transform-origin: 131px 144px; transition: transform .25s; }
 .limb { transition: transform .3s; }
-#legL { transform-origin: 119px 258px; animation: dangleL 3.2s ease-in-out infinite; }
-#legR { transform-origin: 143px 258px; animation: dangleR 3.2s ease-in-out infinite; }
-#armL { transform-origin: 110px 172px; }
-#armR { transform-origin: 152px 172px; }
-.s1 { animation: drift 5s ease-in-out infinite; }
-.s2 { animation: drift 6s ease-in-out infinite reverse; }
-.s3 { animation: drift 4.2s ease-in-out infinite .8s; }
+#legL { transform-origin: 120px 292px; }
+#legR { transform-origin: 142px 292px; }
+#armL { transform-origin: 109px 174px; }
+#armR { transform-origin: 153px 174px; }
+/* 身体那层待机时不做动画（否则每帧重画整张脸）；碎片整层飘 */
+#shardsvg { animation: drift 5s ease-in-out infinite; will-change: transform; }
 
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.8); opacity: .6; } }
@@ -92,8 +91,6 @@ html, body {
   66% { transform: rotate(1.2deg) scaleY(.99); }
 }
 @keyframes sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
-@keyframes dangleL { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(-1.5deg); } }
-@keyframes dangleR { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2deg); } }
 @keyframes drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(3px, -9px); } }
 
 /* 眨眼 */

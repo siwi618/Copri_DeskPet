@@ -109,7 +109,7 @@
   function gaze(mx, my) {
     const r = svg.getBoundingClientRect();
     const k = r.width / 260;
-    const ex = r.left + 131 * k, ey = r.top + 132.4 * k;
+    const ex = r.left + 131 * k, ey = r.top + 142.4 * k;
     const dx = mx - ex, dy = my - ey;
     const d = Math.hypot(dx, dy) || 1;
     const m = Math.min(1, d / 160) * 0.22; // 眼睛组的单位是绿环半径
