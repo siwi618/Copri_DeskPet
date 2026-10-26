@@ -47,6 +47,7 @@ html, body {
 .ink { fill: var(--ink); }
 .ol { fill: var(--hair-ol); }
 .red { fill: var(--hair); }
+.lace { fill: none; stroke: var(--hair); stroke-width: .55; stroke-linejoin: miter; }
 .green { fill: var(--green); }
 .glit { fill: url(#redGlit); }
 .hair-base { fill: none; }
