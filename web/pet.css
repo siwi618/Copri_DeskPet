@@ -22,13 +22,25 @@ html, body {
   height: 530px;
 }
 
-#copri {
+/* 每一层 SVG 叠在同一位置；SVG 根节点不接鼠标，只有画到的图形接（点击穿透靠这个） */
+.layer {
   position: absolute;
   left: 0;
   top: 60px;
   width: 260px;
   height: 470px;
   overflow: visible;
+  pointer-events: none;
+}
+.layer * { pointer-events: visiblePainted; }
+#pet, #hairwrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 260px;
+  height: 530px;
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* ---------- 颜色 ---------- */
@@ -50,18 +62,17 @@ html, body {
 #shadow ellipse { fill: rgba(0, 0, 0, .18); }
 
 /* ---------- 闪粉 ---------- */
-.glitter { pointer-events: none; }
-.gA { animation: twinkle 1.7s steps(4) infinite; }
-.gB { animation: twinkle 2.3s steps(5) infinite reverse; }
+.layer .glitter, .layer .glitter * { pointer-events: none; }
+#twinkle { animation: twinkle 2.3s steps(5) infinite reverse; will-change: opacity; }
 @keyframes twinkle {
   0%, 100% { opacity: .95; }
   50% { opacity: .35; }
 }
 
 /* ---------- 基础动作 ---------- */
-#pet { transform-origin: 131px 300px; animation: float 3.2s ease-in-out infinite; }
+#pet { transform-origin: 131px 360px; animation: float 3.2s ease-in-out infinite; }
 #shadow { transform-origin: 135px 466px; animation: shadow 3.2s ease-in-out infinite; }
-#hair { transform-origin: 131px 175px; animation: flicker 3.6s ease-in-out infinite; }
+#hairwrap { transform-origin: 131px 235px; animation: flicker 3.6s ease-in-out infinite; }
 #bangs { transform-origin: 131px 106px; }
 #head { transform-origin: 131px 144px; transition: transform .25s; }
 .limb { transition: transform .3s; }
@@ -135,8 +146,8 @@ html, body {
 /* 移动：身体朝前进方向倾斜，长发往后飘 */
 .move-left #pet { animation: none; transform: rotate(-6deg); transition: transform .4s; }
 .move-right #pet { animation: none; transform: rotate(6deg); transition: transform .4s; }
-.move-left #hair { animation: none; transform: rotate(4deg) translateX(6px); }
-.move-right #hair { animation: none; transform: rotate(-4deg) translateX(-6px); }
+.move-left #hairwrap { animation: none; transform: rotate(4deg) translateX(6px); }
+.move-right #hairwrap { animation: none; transform: rotate(-4deg) translateX(-6px); }
 .move-left #head { transform: translateX(-3px); }
 .move-right #head { transform: translateX(3px); }
 
@@ -147,6 +158,7 @@ html, body {
 /* ---------- 对话气泡 ---------- */
 #bubble {
   position: absolute;
+  z-index: 2; /* 头发顶到窗口最上面了，气泡要压在头发上 */
   left: 50%;
   top: 8px;
   max-width: 210px;

@@ -41,9 +41,9 @@
   function seedSplatter(parent, x0, y0, w, h, count) {
     for (let i = 0; i < count; i++) {
       const x = x0 + Math.random() * w;
-      const y = y0 + Math.pow(Math.random(), 1.6) * h; // 偏向顶部
+      const y = y0 + Math.pow(Math.random(), 2.2) * h; // 原图越往上越密越亮
       const big = Math.random() < 0.035;
-      const r = big ? 0.9 + Math.random() * 1.1 : 0.22 + Math.pow(Math.random(), 2.4) * 0.8;
+      const r = big ? 0.7 + Math.random() * 0.9 : 0.14 + Math.pow(Math.random(), 2.6) * 0.6;
       splat(parent, x, y, r);
       if (big) {
         for (let k = 0; k < 3 + Math.random() * 4; k++) {
@@ -52,9 +52,13 @@
       }
     }
   }
-  seedSplatter(document.getElementById('splatA'), 0, -24, 260, 214, 2600);
-  seedSplatter(document.getElementById('splatB'), 0, -24, 260, 214, 1100);
+  seedSplatter(document.getElementById('splatA'), 0, -52, 260, 225, 4800);
+  seedSplatter(document.getElementById('splatB'), 0, -52, 260, 225, 2200);
   seedSplatter(document.getElementById('redGlit'), 0, 0, 40, 40, 30);
+  seedSplatter(document.getElementById('splatBangs'), 100, 90, 90, 45, 90);
+  // 细密闪粉底：均匀的小点铺满一块可平铺的图案
+  const fine = document.getElementById('fineGlit');
+  for (let i = 0; i < 260; i++) splat(fine, Math.random() * 36, Math.random() * 36, 0.1 + Math.random() * 0.28);
 
   // ---------- 状态 ----------
   // 持续状态：idle / sleep / drag / move-left / move-right；瞬时状态：happy / spin
