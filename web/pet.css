@@ -41,12 +41,14 @@ html, body {
 .hair-base { fill: none; }
 .hair-fill { fill: var(--hair); }
 .hair-ol { fill: var(--hair-ol); }
-.eye-ring { fill: none; stroke: var(--green); stroke-width: 1.6; }
-.iris { fill: var(--iris); stroke: var(--ink); stroke-width: 1.8; }
-.glint { fill: #fff; }
+.hair-shade1 { fill: #c4224a; }
+.hair-shade2 { fill: #a51a42; }
+.eye-ring { fill: none; stroke: var(--green); stroke-width: .75; }
+.iris { fill: var(--iris); stroke: var(--ink); stroke-width: .45; }
+.glint { fill: #fff; stroke: var(--ink); stroke-width: .3; }
 .teeth { fill: #fff; }
-.mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linejoin: miter; }
-.eye-closed { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: square; }
+.mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: .8; stroke-linejoin: miter; }
+.eye-closed { fill: none; stroke: var(--ink); stroke-width: 1.1; stroke-linecap: square; }
 .shard { fill: var(--green); }
 #shadow ellipse { fill: rgba(0, 0, 0, .18); }
 
@@ -62,20 +64,25 @@ html, body {
 /* ---------- 基础动作 ---------- */
 #pet { transform-origin: 131px 300px; animation: float 3.2s ease-in-out infinite; }
 #shadow { transform-origin: 135px 466px; animation: shadow 3.2s ease-in-out infinite; }
-#hair { transform-origin: 131px 130px; animation: sway 4.5s ease-in-out infinite; }
-#bangs { transform-origin: 131px 104px; animation: sway 4.5s ease-in-out infinite; }
-#head { transform-origin: 131px 154px; transition: transform .25s; }
+#hair { transform-origin: 131px 175px; animation: flicker 3.6s ease-in-out infinite; }
+#bangs { transform-origin: 131px 106px; }
+#head { transform-origin: 131px 150px; transition: transform .25s; }
 .limb { transition: transform .3s; }
 #legL { transform-origin: 119px 258px; animation: dangleL 3.2s ease-in-out infinite; }
 #legR { transform-origin: 143px 258px; animation: dangleR 3.2s ease-in-out infinite; }
-#armL { transform-origin: 114px 172px; }
-#armR { transform-origin: 148px 172px; }
+#armL { transform-origin: 110px 172px; }
+#armR { transform-origin: 152px 172px; }
 .s1 { animation: drift 5s ease-in-out infinite; }
 .s2 { animation: drift 6s ease-in-out infinite reverse; }
 .s3 { animation: drift 4.2s ease-in-out infinite .8s; }
 
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.8); opacity: .6; } }
+@keyframes flicker {
+  0%, 100% { transform: rotate(-1.2deg) scaleY(1); }
+  33% { transform: rotate(.6deg) scaleY(1.03); }
+  66% { transform: rotate(1.2deg) scaleY(.99); }
+}
 @keyframes sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
 @keyframes dangleL { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(-1.5deg); } }
 @keyframes dangleR { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2deg); } }
@@ -131,8 +138,8 @@ html, body {
 /* 移动：身体朝前进方向倾斜，长发往后飘 */
 .move-left #pet { animation: none; transform: rotate(-6deg); transition: transform .4s; }
 .move-right #pet { animation: none; transform: rotate(6deg); transition: transform .4s; }
-.move-left #hair, .move-left #bangs { animation: none; transform: rotate(4deg) translateX(6px); }
-.move-right #hair, .move-right #bangs { animation: none; transform: rotate(-4deg) translateX(-6px); }
+.move-left #hair { animation: none; transform: rotate(4deg) translateX(6px); }
+.move-right #hair { animation: none; transform: rotate(-4deg) translateX(-6px); }
 .move-left #head { transform: translateX(-3px); }
 .move-right #head { transform: translateX(3px); }
 

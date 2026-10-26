@@ -7,7 +7,7 @@
   #tile { width: 512px; height: 512px; overflow: hidden; position: relative;
           background: linear-gradient(160deg, #241446, #06040f); }
   iframe { position: absolute; border: 0; width: 260px; height: 530px; left: 0; top: 0;
-           transform-origin: 0 0; transform: translate(-45px, -160px) scale(2.3); }
+           transform-origin: 0 0; transform: translate(-118px, -250px) scale(2.9); }
 </style>
 <div id="tile"><iframe src="../web/pet.html"></iframe></div>
 <script>
@@ -16,7 +16,8 @@
     const d = f.contentDocument;
     d.querySelectorAll('#pet, #hair, #bangs, #shadow').forEach(e => e.style.animation = 'none');
     d.getElementById('shadow').style.display = 'none';
-    f.contentWindow.copri.flash('happy', 1e9);
+    d.querySelector('.m-neutral').style.display = 'none';
+    d.querySelector('.m-happy').style.display = 'inline';
     d.getElementById('hearts').style.display = 'none';
     d.getElementById('pet').style.animation = 'none';
     f.contentWindow.copri.tick(240, 250);

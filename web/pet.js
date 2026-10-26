@@ -52,8 +52,8 @@
       }
     }
   }
-  seedSplatter(document.getElementById('splatA'), 0, 0, 260, 260, 2600);
-  seedSplatter(document.getElementById('splatB'), 0, 0, 260, 260, 1100);
+  seedSplatter(document.getElementById('splatA'), 0, 0, 260, 190, 2400);
+  seedSplatter(document.getElementById('splatB'), 0, 0, 260, 190, 1000);
   seedSplatter(document.getElementById('redGlit'), 0, 0, 40, 40, 30);
 
   // ---------- 状态 ----------
@@ -105,10 +105,10 @@
   function gaze(mx, my) {
     const r = svg.getBoundingClientRect();
     const k = r.width / 260;
-    const ex = r.left + 131 * k, ey = r.top + 122 * k;
+    const ex = r.left + 130.5 * k, ey = r.top + 123 * k;
     const dx = mx - ex, dy = my - ey;
     const d = Math.hypot(dx, dy) || 1;
-    const m = Math.min(1, d / 160) * 2.4;
+    const m = Math.min(1, d / 160) * 1.25;
     const t = `translate(${(dx / d * m).toFixed(2)}px, ${(dy / d * m).toFixed(2)}px)`;
     pupils.forEach(p => { p.style.transform = t; });
   }
