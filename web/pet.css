@@ -77,8 +77,8 @@ html, body {
 #bangs { transform-origin: 131px 106px; }
 #head { transform-origin: 131px 144px; transition: transform .25s; }
 .limb { transition: transform .3s; }
-#legL { transform-origin: 120px 292px; }
-#legR { transform-origin: 142px 292px; }
+#legL { transform-origin: 120px 276px; }
+#legR { transform-origin: 142px 276px; }
 #armL { transform-origin: 109px 174px; }
 #armR { transform-origin: 153px 174px; }
 /* 身体那层待机时不做动画（否则每帧重画整张脸）；碎片整层飘 */
