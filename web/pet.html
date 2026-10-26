@@ -15,14 +15,16 @@
       <pattern id="redGlit" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#e43050"/></pattern>
 
       <!-- 轮廓形状：不带 class，方便 <use> 上色（紫色描边层和本体共用） -->
-      <path id="hairShape" d="M120,170 L96,178 Q71.2,170.4 48,182 L72,166 Q46.4,154.6 20,164 L52,150 Q30.6,131.0 2,132 L38,128 Q32.0,108.2 14,98 L44,104 Q44.4,79.8 28,62 L56,82 Q66.0,62.8 60,42 L70,62 Q84.8,36.6 78,8 L96,46 Q106.8,36.4 108,22 L116,40 Q119.0,15.6 138,0 L146,36 Q151.6,21.0 166,14 L170,44 Q180.8,18.8 206,8 L196,56 Q212.8,40.0 236,40 L214,76 Q236.8,69.2 258,80 L228,100 Q246.6,108.8 254,128 L222,128 Q240.4,139.2 246,160 L210,156 Q223.0,168.2 224,186 L190,170 L166,178 L142,170 Z"/>
+      <path id="hairShape" d="M124,150 L108,158 L101,186 L96,166 L82,168 L80,162 L68,176 L64,160 L40,164 L12,174 L28,150 L22,148 L24,142 L18,126 L-2,102 L22,108 L20,86 L26,84 L22,56 L34,52 L30,-6 L56,44 L70,38 L72,32 L78,34 L92,28 L106,24 L120,-30 L118,-6 L124,-4 L128,22 L150,18 L164,-2 L170,22 L188,22 L210,-22 L204,22 L212,26 L226,30 L230,48 L236,50 L238,62 L264,68 L240,80 L246,96 L244,112 L250,114 L248,132 L258,152 L236,148 L234,182 L224,160 L212,166 L210,158 L190,162 L178,152 L162,156 L156,146 L144,144 Z"/>
       <polygon id="torsoShape" points="106,166 156,166 157,176 153,192 146,206 140,222 146,236 154,250 150,262 131,268 112,262 108,250 116,236 122,222 116,206 109,192 105,176"/>
       <polygon id="legLShape" points="109,250 128,264 126,300 122,340 123,410 120,440 117,464 114,440 113,410 110,340 106,292"/>
       <polygon id="legRShape" points="153,250 156,292 152,340 150,408 154,436 156,462 146,440 140,410 140,342 136,300 134,264"/>
       <polygon id="armLShape" points="106,168 93,226 86,280 80,300 85,291 84,309 88,293 90,307 91,291 95,301 92,282 100,228 114,175"/>
       <polygon id="armRShape" points="156,168 169,226 176,280 182,300 177,291 178,309 174,293 172,307 171,291 167,301 170,282 162,228 148,175"/>
-      <!-- 头：上沿藏在刘海下；眼旁一条曲线 + 下巴两条直线 -->
-      <path id="headShape" d="M115,109 L151,107 L131,153 L118,138 Q108,124 115,109 Z"/>
+      <!-- 头（照 face_shape）：眼旁一条往里弯的短曲线 + 左下一条短线到下巴尖 + 右边一条长斜线；上沿藏在刘海下 -->
+      <path id="headShape" d="M111.2,112 L183,108 L129,150 L111.4,140.6 Q114.6,131 111.2,123.8 Z"/>
+      <polygon id="bangsShape" points="106.5,96 182,96 184,115 172,118.5 164,121 157,116 150,118.5 142.5,117 137.6,124 138.8,123.2 135.2,134.5 134.4,125.4 132.8,126.4 131.4,118 124,121.5 118,118 111.5,124.6 106.5,124"/>
+      <clipPath id="bangsClip"><use href="#bangsShape"/></clipPath>
 
       <clipPath id="hairClip"><use href="#hairShape"/></clipPath>
       <clipPath id="headClip"><use href="#headShape"/></clipPath>
@@ -40,15 +42,12 @@
 
       <!-- 头发（后层）：像火焰/云一样向上飘 -->
       <g id="hair">
-        <use href="#hairShape" class="hair-ol" transform="translate(-4,4)"/>
+        <use href="#hairShape" class="hair-ol" transform="translate(-3.2,3.6)"/>
+        <!-- 底部细黑边：黑色同形状往下错开一点，只在朝下的边缘露出来 -->
+        <use href="#hairShape" class="ink" transform="translate(0,2.2)"/>
         <use href="#hairShape" class="hair-fill"/>
         <g class="glitter gA" clip-path="url(#hairClip)" id="splatA"></g>
         <g class="glitter gB" clip-path="url(#hairClip)" id="splatB"></g>
-        <!-- 底部的阴影层次，只沿下缘往上叠 -->
-        <g clip-path="url(#hairClip)">
-          <path class="hair-shade1" d="M0,200 L0,168 Q5,174 10,172 Q12,162 20,158 Q28,164 35,162 Q38,152 50,148 Q58,154 65,152 Q68,142 80,138 Q86,140 92,136 Q94,126 104,122 Q118,136 131,134 Q136,124 158,120 Q165,154 172,152 Q175,142 186,138 Q193,164 200,162 Q203,152 214,148 Q220,172 227,170 Q230,160 240,156 Q248,168 260,166 L260,200 Z"/>
-          <path class="hair-shade2" d="M0,200 L0,182 Q8,188 15,186 Q18,176 30,172 Q40,178 50,176 Q54,166 70,162 Q78,166 87,164 Q90,154 104,150 Q118,164 132,162 Q138,152 160,148 Q169,180 178,178 Q182,168 196,164 Q205,188 214,186 Q218,176 232,172 Q240,184 260,182 L260,200 Z"/>
-        </g>
       </g>
 
       <!-- 身体 -->
@@ -65,7 +64,7 @@
           <polygon class="ink" points="146,330 150,340 146,352 142,340"/>
           <polygon class="ink" points="136,268 146,262 140,290"/>
         </g>
-        <rect class="ink" x="128.6" y="146" width="5" height="22"/>
+        <rect class="ink" x="126.6" y="146" width="5" height="22"/>
         <use href="#torsoShape" class="ol" transform="translate(-2.5,2.5)"/>
         <use href="#torsoShape" class="ink"/>
         <polygon class="green" points="106,166 128,166 120,186 109,192 105,176"/>
@@ -96,9 +95,9 @@
         <use href="#headShape" class="ol" transform="translate(-1.5,1.5)"/>
         <use href="#headShape" class="ink"/>
         <g clip-path="url(#headClip)">
-          <polygon id="face" class="green" points="100,100 160,100 160,130 100,136"/>
+          <polygon id="face" class="green" points="100,114 190,108 190,131.5 100,135.5"/>
           <g id="eyes">
-            <g class="eye" id="eyeL" transform="translate(122.5,124)">
+            <g class="eye" id="eyeL" transform="translate(123,127)">
               <g class="eye-open">
                 <circle r="5.8" class="ink"/>
                 <polygon class="ink" points="2,-5 6.5,-9 5.6,-3.4"/>
@@ -108,7 +107,7 @@
               </g>
               <path class="eye-closed" d="M-4.5,-0.5 Q0,3 4.5,-0.5 M-4.5,-0.5 L-6.5,-2.5 M4.5,-0.5 L6.5,-2.5"/>
             </g>
-            <g class="eye" id="eyeR" transform="translate(138,122.5)">
+            <g class="eye" id="eyeR" transform="translate(147.5,125.2)">
               <g class="eye-open">
                 <circle r="5.8" class="ink"/>
                 <polygon class="ink" points="-2,-5 -6.5,-9 -5.6,-3.4"/>
@@ -120,15 +119,17 @@
             </g>
           </g>
           <g id="mouths">
-            <polyline class="mouth m-neutral" points="125,143.5 129,143.5 130.4,141.8 131.6,144.2 135,143.3"/>
-            <polygon class="mouth m-happy teeth" points="124,141 137,139.6 134.8,142.4 132.8,141 130.8,145.2 128.6,141.8 126.2,143.4"/>
-            <polygon class="mouth m-shock teeth" points="127,140.8 134.5,140 130.6,146.4"/>
-            <polyline class="mouth m-sleep" points="126,143.5 129,144.2 132,143.5 135,144.2"/>
+            <polyline class="mouth m-neutral" points="119,143.2 123,143.2 124.4,141.6 125.6,144 130,143"/>
+            <polygon class="mouth m-happy teeth" points="117.5,141 132,139.4 129.8,142.3 127.8,140.9 125.8,145.4 123.6,141.8 121.2,143.4"/>
+            <polygon class="mouth m-shock teeth" points="121.5,140.8 129.5,140 125.4,146.6"/>
+            <polyline class="mouth m-sleep" points="120,143.5 123,144.2 126,143.5 129,144.2"/>
           </g>
         </g>
-        <!-- 刘海：盖住头顶，两眼之间垂下一道锯齿发尖 -->
+        <!-- 刘海：盖住头顶，两眼之间垂下一道锯齿发尖，底边一道细黑边 -->
         <g id="bangs">
-          <polygon class="hair-fill" points="106,101 156,99 152,110 146,107.5 140.5,111.5 134.5,108.5 132.6,118 133.9,117 130.6,128.5 130.1,119.4 128.5,120.2 127.4,110 121,113 116,108.5 110.5,113"/>
+          <g clip-path="url(#headClip)"><use href="#bangsShape" class="ink" transform="translate(0,1.4)"/></g>
+          <use href="#bangsShape" class="hair-fill"/>
+          <use href="#splatA" class="glitter gA" clip-path="url(#bangsClip)"/>
         </g>
       </g>
 

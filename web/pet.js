@@ -52,8 +52,8 @@
       }
     }
   }
-  seedSplatter(document.getElementById('splatA'), 0, 0, 260, 190, 2400);
-  seedSplatter(document.getElementById('splatB'), 0, 0, 260, 190, 1000);
+  seedSplatter(document.getElementById('splatA'), 0, -24, 260, 214, 2600);
+  seedSplatter(document.getElementById('splatB'), 0, -24, 260, 214, 1100);
   seedSplatter(document.getElementById('redGlit'), 0, 0, 40, 40, 30);
 
   // ---------- 状态 ----------
@@ -105,7 +105,7 @@
   function gaze(mx, my) {
     const r = svg.getBoundingClientRect();
     const k = r.width / 260;
-    const ex = r.left + 130.5 * k, ey = r.top + 123 * k;
+    const ex = r.left + 135 * k, ey = r.top + 126 * k;
     const dx = mx - ex, dy = my - ey;
     const d = Math.hypot(dx, dy) || 1;
     const m = Math.min(1, d / 160) * 1.25;

@@ -41,8 +41,6 @@ html, body {
 .hair-base { fill: none; }
 .hair-fill { fill: var(--hair); }
 .hair-ol { fill: var(--hair-ol); }
-.hair-shade1 { fill: #c4224a; }
-.hair-shade2 { fill: #a51a42; }
 .eye-ring { fill: none; stroke: var(--green); stroke-width: .75; }
 .iris { fill: var(--iris); stroke: var(--ink); stroke-width: .45; }
 .glint { fill: #fff; stroke: var(--ink); stroke-width: .3; }
