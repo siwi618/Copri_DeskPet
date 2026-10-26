@@ -15,7 +15,7 @@ final class PetWebView: WKWebView {
 }
 
 final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
-    private let baseSize = NSSize(width: 240, height: 340)
+    private let baseSize = NSSize(width: 260, height: 530)
     private let defaults = UserDefaults.standard
 
     private var panel: NSPanel!
@@ -45,7 +45,7 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
 
     override init() {
         let s = defaults.double(forKey: "scale")
-        scale = s > 0 ? CGFloat(s) : 0.7
+        scale = s > 0 ? CGFloat(s) : 0.6
         mode = Mode(rawValue: defaults.string(forKey: "mode") ?? "") ?? .wander
         super.init()
     }
@@ -263,7 +263,7 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         menu.addItem(.separator())
         let sizeItem = NSMenuItem(title: "大小", action: nil, keyEquivalent: "")
         let sizeMenu = NSMenu()
-        for (title, s) in [("小", 0.5), ("中", 0.7), ("大", 1.0)] {
+        for (title, s) in [("小", 0.45), ("中", 0.6), ("大", 0.8)] {
             let i = item(title, #selector(setScale(_:)))
             i.representedObject = s
             i.state = abs(Double(scale) - s) < 0.01 ? .on : .off

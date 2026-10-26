@@ -19,16 +19,16 @@ html, body {
 
 #stage {
   position: relative;
-  width: 240px;
-  height: 340px;
+  width: 260px;
+  height: 530px;
 }
 
 #copri {
   position: absolute;
   left: 0;
   top: 60px;
-  width: 240px;
-  height: 280px;
+  width: 260px;
+  height: 470px;
   overflow: visible;
 }
 
@@ -37,6 +37,7 @@ html, body {
 .ol { fill: var(--hair-ol); }
 .red { fill: var(--hair); }
 .green { fill: var(--green); }
+.glit { fill: url(#redGlit); }
 .hair-base { fill: none; }
 .hair-fill { fill: var(--hair); }
 .hair-ol { fill: var(--hair-ol); }
@@ -59,16 +60,16 @@ html, body {
 }
 
 /* ---------- 基础动作 ---------- */
-#pet { transform-origin: 120px 200px; animation: float 3.2s ease-in-out infinite; }
-#shadow { transform-origin: 120px 272px; animation: shadow 3.2s ease-in-out infinite; }
-#hair { transform-origin: 120px 120px; animation: sway 4.5s ease-in-out infinite; }
-#bangs { transform-origin: 120px 90px; animation: sway 4.5s ease-in-out infinite; }
-#head { transform-origin: 121px 150px; transition: transform .25s; }
+#pet { transform-origin: 131px 300px; animation: float 3.2s ease-in-out infinite; }
+#shadow { transform-origin: 135px 466px; animation: shadow 3.2s ease-in-out infinite; }
+#hair { transform-origin: 131px 130px; animation: sway 4.5s ease-in-out infinite; }
+#bangs { transform-origin: 131px 104px; animation: sway 4.5s ease-in-out infinite; }
+#head { transform-origin: 131px 154px; transition: transform .25s; }
 .limb { transition: transform .3s; }
-#legL { transform-origin: 116px 204px; animation: dangleL 3.2s ease-in-out infinite; }
-#legR { transform-origin: 127px 204px; animation: dangleR 3.2s ease-in-out infinite; }
-#armL { transform-origin: 105px 166px; }
-#armR { transform-origin: 137px 166px; }
+#legL { transform-origin: 119px 258px; animation: dangleL 3.2s ease-in-out infinite; }
+#legR { transform-origin: 143px 258px; animation: dangleR 3.2s ease-in-out infinite; }
+#armL { transform-origin: 114px 172px; }
+#armR { transform-origin: 148px 172px; }
 .s1 { animation: drift 5s ease-in-out infinite; }
 .s2 { animation: drift 6s ease-in-out infinite reverse; }
 .s3 { animation: drift 4.2s ease-in-out infinite .8s; }
@@ -76,8 +77,8 @@ html, body {
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.8); opacity: .6; } }
 @keyframes sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
-@keyframes dangleL { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-3deg); } }
-@keyframes dangleR { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(3deg); } }
+@keyframes dangleL { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(-1.5deg); } }
+@keyframes dangleR { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2deg); } }
 @keyframes drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(3px, -9px); } }
 
 /* 眨眼 */
@@ -94,23 +95,23 @@ html, body {
 .happy .m-neutral { display: none; }
 .happy .m-happy { display: inline; }
 .happy #pet { animation: hop .45s ease-out 2; }
-.happy #armL { transform: rotate(125deg); }
-.happy #armR { transform: rotate(-125deg); }
+.happy #armL { transform: rotate(22deg); }
+.happy #armR { transform: rotate(-168deg); }
 .happy #hearts { display: inline; }
-@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-22px) scale(1.03, .97); } }
+@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px); } }
 
 /* 被拎起来：吃惊，手脚乱晃 */
 .drag .m-neutral { display: none; }
 .drag .m-shock { display: inline; }
 .drag #pet { animation: wobble .5s ease-in-out infinite; }
-.drag #armL { transform: rotate(155deg); }
-.drag #armR { transform: rotate(-155deg); }
+.drag #armL { transform: rotate(150deg); }
+.drag #armR { transform: rotate(-150deg); }
 .drag #legL { animation: kickL .25s ease-in-out infinite; }
 .drag #legR { animation: kickR .25s ease-in-out infinite; }
 .drag #shadow { opacity: 0; }
-@keyframes wobble { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
-@keyframes kickL { 0%, 100% { transform: rotate(14deg); } 50% { transform: rotate(-10deg); } }
-@keyframes kickR { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(10deg); } }
+@keyframes wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes kickL { 0%, 100% { transform: rotate(9deg); } 50% { transform: rotate(-6deg); } }
+@keyframes kickR { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(6deg); } }
 
 /* 睡觉：闭眼 + zzz，漂得更慢 */
 .sleep .eye-open { display: none; }
@@ -118,7 +119,7 @@ html, body {
 .sleep .m-neutral { display: none; }
 .sleep .m-sleep { display: inline; }
 .sleep #pet { animation-duration: 6s; }
-.sleep #head { transform: rotate(-6deg) translateY(3px); }
+.sleep #head { transform: rotate(-8deg) translateY(2px); }
 .sleep #zzz { display: inline; }
 #zzz, #hearts { display: none; }
 #zzz text { font: bold 16px/1 "Avenir Next", sans-serif; fill: var(--hair-ol); animation: zfloat 2.4s ease-in infinite; }
@@ -128,8 +129,8 @@ html, body {
 #hearts text { font: 900 24px/1 "Avenir Next", sans-serif; fill: var(--green); stroke: var(--ink); stroke-width: 1.5; }
 
 /* 移动：身体朝前进方向倾斜，长发往后飘 */
-.move-left #pet { animation: none; transform: rotate(-8deg); transition: transform .4s; }
-.move-right #pet { animation: none; transform: rotate(8deg); transition: transform .4s; }
+.move-left #pet { animation: none; transform: rotate(-6deg); transition: transform .4s; }
+.move-right #pet { animation: none; transform: rotate(6deg); transition: transform .4s; }
 .move-left #hair, .move-left #bangs { animation: none; transform: rotate(4deg) translateX(6px); }
 .move-right #hair, .move-right #bangs { animation: none; transform: rotate(-4deg) translateX(-6px); }
 .move-left #head { transform: translateX(-3px); }

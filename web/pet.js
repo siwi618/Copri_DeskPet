@@ -37,6 +37,7 @@
   }
   seedGlitter('glitterA', 60, 90);
   seedGlitter('glitterB', 47, 45);
+  seedGlitter('redGlit', 40, 40);
 
   // ---------- 状态 ----------
   // 持续状态：idle / sleep / drag / move-left / move-right；瞬时状态：happy / spin
@@ -86,11 +87,11 @@
   // mx, my：鼠标在页面坐标系中的位置（可以在窗口外）
   function gaze(mx, my) {
     const r = svg.getBoundingClientRect();
-    const k = r.width / 240;
-    const ex = r.left + 121 * k, ey = r.top + 128 * k;
+    const k = r.width / 260;
+    const ex = r.left + 131 * k, ey = r.top + 125 * k;
     const dx = mx - ex, dy = my - ey;
     const d = Math.hypot(dx, dy) || 1;
-    const m = Math.min(1, d / 160) * 2.6;
+    const m = Math.min(1, d / 160) * 2.4;
     const t = `translate(${(dx / d * m).toFixed(2)}px, ${(dy / d * m).toFixed(2)}px)`;
     pupils.forEach(p => { p.style.transform = t; });
   }
