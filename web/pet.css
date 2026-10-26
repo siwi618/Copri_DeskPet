@@ -42,7 +42,7 @@ html, body {
 .hair-fill { fill: var(--hair); }
 .hair-ol { fill: var(--hair-ol); }
 .eye-ring { fill: none; stroke: var(--green); stroke-width: 1.6; }
-.iris { fill: var(--iris); stroke: var(--iris-ol); stroke-width: 1.4; }
+.iris { fill: var(--iris); stroke: var(--ink); stroke-width: 1.8; }
 .glint { fill: #fff; }
 .teeth { fill: #fff; }
 .mouth.m-neutral, .mouth.m-sleep { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linejoin: miter; }

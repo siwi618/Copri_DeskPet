@@ -22,22 +22,39 @@
     if (h) h.postMessage(msg);
   }
 
-  // ---------- 闪粉 ----------
-  function seedGlitter(id, size, count) {
-    const p = document.getElementById(id);
+  // ---------- 泼墨闪粉 ----------
+  // 不规则的白色墨点：大多很小，少数大块并带飞溅的小点；越靠上越密
+  function splat(parent, x, y, r) {
+    const n = 5 + Math.floor(Math.random() * 4);
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + Math.random() * 0.5;
+      const rr = r * (0.45 + Math.random() * 0.8);
+      pts.push((x + Math.cos(a) * rr).toFixed(1) + ',' + (y + Math.sin(a) * rr).toFixed(1));
+    }
+    const p = document.createElementNS(SVG_NS, 'polygon');
+    p.setAttribute('points', pts.join(' '));
+    p.setAttribute('fill', '#fff');
+    p.setAttribute('opacity', (0.55 + Math.random() * 0.45).toFixed(2));
+    parent.appendChild(p);
+  }
+  function seedSplatter(parent, x0, y0, w, h, count) {
     for (let i = 0; i < count; i++) {
-      const c = document.createElementNS(SVG_NS, 'circle');
-      c.setAttribute('cx', (Math.random() * size).toFixed(1));
-      c.setAttribute('cy', (Math.random() * size).toFixed(1));
-      c.setAttribute('r', (Math.random() < 0.12 ? 1.1 : 0.35 + Math.random() * 0.45).toFixed(2));
-      c.setAttribute('fill', '#fff');
-      c.setAttribute('opacity', (0.45 + Math.random() * 0.55).toFixed(2));
-      p.appendChild(c);
+      const x = x0 + Math.random() * w;
+      const y = y0 + Math.pow(Math.random(), 1.6) * h; // 偏向顶部
+      const big = Math.random() < 0.035;
+      const r = big ? 0.9 + Math.random() * 1.1 : 0.22 + Math.pow(Math.random(), 2.4) * 0.8;
+      splat(parent, x, y, r);
+      if (big) {
+        for (let k = 0; k < 3 + Math.random() * 4; k++) {
+          splat(parent, x + (Math.random() - 0.5) * r * 7, y + (Math.random() - 0.5) * r * 7, 0.3 + Math.random() * 0.5);
+        }
+      }
     }
   }
-  seedGlitter('glitterA', 60, 90);
-  seedGlitter('glitterB', 47, 45);
-  seedGlitter('redGlit', 40, 40);
+  seedSplatter(document.getElementById('splatA'), 0, 0, 260, 260, 2600);
+  seedSplatter(document.getElementById('splatB'), 0, 0, 260, 260, 1100);
+  seedSplatter(document.getElementById('redGlit'), 0, 0, 40, 40, 30);
 
   // ---------- 状态 ----------
   // 持续状态：idle / sleep / drag / move-left / move-right；瞬时状态：happy / spin
@@ -88,7 +105,7 @@
   function gaze(mx, my) {
     const r = svg.getBoundingClientRect();
     const k = r.width / 260;
-    const ex = r.left + 131 * k, ey = r.top + 125 * k;
+    const ex = r.left + 131 * k, ey = r.top + 122 * k;
     const dx = mx - ex, dy = my - ey;
     const d = Math.hypot(dx, dy) || 1;
     const m = Math.min(1, d / 160) * 2.4;
