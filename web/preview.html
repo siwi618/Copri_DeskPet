@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Copri preview</title>
+<style>body{margin:0;display:flex;gap:8px;background:#cfd6e0}iframe{width:240px;height:340px;border:0;background:transparent}</style>
+<body>
+<script>
+// 开发用：并排预览各状态
+const states = ['idle', 'happy', 'drag', 'sleep', 'move-right'];
+for (const s of states) {
+  const f = document.createElement('iframe');
+  f.src = 'pet.html';
+  f.onload = () => {
+    const c = f.contentWindow.copri;
+    if (s === 'happy') { c.flash('happy', 1e9); c.say('你真行啊！', 1e9); }
+    else if (s === 'drag') { c.setState('drag'); c.say('赶紧放我下来！', 1e9); }
+    else if (s === 'sleep') c.setState('sleep');
+    else c.setState(s);
+    c.tick(400, 300);
+  };
+  document.body.appendChild(f);
+}
+</script>

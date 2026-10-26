@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Copri icon</title>
+<!-- 开发用：渲染 App 图标，再由 scripts/make_icon.sh 转成 icns -->
+<style>
+  html, body { margin: 0; background: transparent; }
+  #tile { width: 512px; height: 512px; overflow: hidden; position: relative;
+          background: linear-gradient(160deg, #241446, #06040f); }
+  iframe { position: absolute; border: 0; width: 240px; height: 340px; left: 0; top: 0;
+           transform-origin: 0 0; transform: translate(-22px, -150px) scale(2.3); }
+</style>
+<div id="tile"><iframe src="../web/pet.html"></iframe></div>
+<script>
+  const f = document.querySelector('iframe');
+  f.onload = () => {
+    const d = f.contentDocument;
+    d.querySelectorAll('#pet, #hair, #bangs, #shadow').forEach(e => e.style.animation = 'none');
+    d.getElementById('shadow').style.display = 'none';
+    f.contentWindow.copri.flash('happy', 1e9);
+    d.getElementById('hearts').style.display = 'none';
+    d.getElementById('pet').style.animation = 'none';
+    f.contentWindow.copri.tick(240, 250);
+  };
+</script>

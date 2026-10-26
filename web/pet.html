@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Copri</title>
+<link rel="stylesheet" href="pet.css">
+</head>
+<body>
+<div id="stage">
+  <div id="bubble" class="hidden"><span id="bubble-text"></span></div>
+
+  <svg id="copri" viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- 发丝闪粉：两层随机白点，由 pet.js 填充 -->
+      <pattern id="glitterA" width="60" height="60" patternUnits="userSpaceOnUse"></pattern>
+      <pattern id="glitterB" width="47" height="47" patternUnits="userSpaceOnUse"></pattern>
+      <polygon id="hairShape" points="22,124 6,100 24,94 8,64 34,66 26,36 54,44 52,12 78,30 88,4 106,26 122,0 138,24 158,6 166,32 194,16 188,44 220,38 206,64 236,74 212,90 232,114 206,112 224,144 194,130 202,164 176,140 172,170 160,134 148,150 142,118 100,118 92,152 82,130 68,166 62,136 40,160 44,130 18,146"/>
+      <clipPath id="hairClip"><use href="#hairShape"/></clipPath>
+      <clipPath id="bangClip"><use href="#bangShape"/></clipPath>
+    </defs>
+
+    <g id="shadow"><ellipse cx="120" cy="272" rx="34" ry="5"/></g>
+
+    <g id="pet">
+      <!-- 漂浮的绿色碎片 -->
+      <g id="shards">
+        <polygon class="shard s1" points="22,182 30,176 20,232 14,238"/>
+        <polygon class="shard s2" points="212,150 218,146 214,190 208,196"/>
+        <polygon class="shard s3" points="36,214 41,210 38,244 33,248"/>
+      </g>
+
+      <!-- 身体 -->
+      <g id="body">
+        <g id="legL" class="limb">
+          <polygon class="ol" points="111,204 121,206 108,262 99,270 103,258"/>
+          <polygon class="ink" points="111,202 121,204 108,260 99,268 103,256"/>
+          <polygon class="red" points="112,212 117,213 106,248 104,246"/>
+        </g>
+        <g id="legR" class="limb">
+          <polygon class="ol" points="122,206 132,204 140,258 147,270 133,262"/>
+          <polygon class="ink" points="122,204 132,202 140,256 147,268 133,260"/>
+          <polygon class="green" points="129,214 133,214 137,240 133,238"/>
+        </g>
+        <polygon class="ol" points="100,166 142,166 131,208 111,208" transform="translate(-2,2)"/>
+        <polygon class="ink" points="100,164 142,164 131,206 111,206"/>
+        <polygon class="green" points="99,164 112,164 103,180"/>
+        <polygon class="green" points="130,164 143,164 140,178"/>
+        <polygon class="red" points="121,166 130,182 121,204 112,182"/>
+        <polygon class="ink" points="121,176 125,184 121,194 117,184"/>
+        <rect class="ink" x="116" y="148" width="10" height="20"/>
+      </g>
+
+      <!-- 头发（后层） -->
+      <g id="hair">
+        <g id="strands">
+          <polygon class="ol" points="200,118 214,124 238,196 230,200" transform="translate(-3,3)"/>
+          <polygon class="red" points="200,118 214,124 238,196 230,200"/>
+          <polygon class="ol" points="186,140 196,140 210,214 204,216" transform="translate(-3,3)"/>
+          <polygon class="red" points="186,140 196,140 210,214 204,216"/>
+          <polygon class="ol" points="30,126 44,132 10,204 4,198" transform="translate(-3,3)"/>
+          <polygon class="red" points="30,126 44,132 10,204 4,198"/>
+          <polygon class="ol" points="54,140 62,146 40,222 34,220" transform="translate(-3,3)"/>
+          <polygon class="red" points="54,140 62,146 40,222 34,220"/>
+          <polygon class="ol" points="214,60 240,52 232,62" transform="translate(-3,3)"/>
+          <polygon class="red" points="214,60 240,52 232,62"/>
+          <polygon class="ol" points="10,58 0,40 22,52" transform="translate(-3,3)"/>
+          <polygon class="red" points="10,58 0,40 22,52"/>
+        </g>
+        <use href="#hairShape" class="hair-ol" transform="translate(-4,4)"/>
+        <use href="#hairShape" class="hair-fill"/>
+        <rect class="glitter gA" clip-path="url(#hairClip)" x="0" y="0" width="240" height="180" fill="url(#glitterA)"/>
+        <rect class="glitter gB" clip-path="url(#hairClip)" x="0" y="0" width="240" height="180" fill="url(#glitterB)"/>
+        <!-- 发丝里的黑色尖刺 -->
+        <polygon class="ink" points="70,96 100,104 66,124"/>
+        <polygon class="ink" points="176,86 146,104 186,112"/>
+        <polygon class="ink" points="110,64 118,104 102,100"/>
+        <polygon class="ink" points="150,60 140,104 132,98"/>
+        <polygon class="ink" points="40,108 70,112 30,132"/>
+      </g>
+
+      <g id="arms">
+        <g id="armL" class="limb">
+          <polygon class="ink" points="102,164 109,168 92,206 86,222 83,210"/>
+          <polygon class="red" points="86,212 92,206 96,222 89,226 81,224"/>
+        </g>
+        <g id="armR" class="limb">
+          <polygon class="ink" points="133,168 140,164 158,206 160,222 152,208"/>
+          <polygon class="red" points="152,206 158,206 166,218 160,226 150,220"/>
+        </g>
+      </g>
+
+      <!-- 脸 -->
+      <g id="head">
+        <polygon class="ol" points="90,110 146,110 154,132 142,162 120,168 96,162 84,132"/>
+        <polygon class="ink" points="94,106 150,106 158,128 146,158 122,164 98,158 86,128"/>
+        <polygon id="face" class="green" points="93,113 149,113 155,127 147,141 95,141 87,127"/>
+        <g id="eyes">
+          <g class="eye" id="eyeL" transform="translate(107,127)">
+            <g class="eye-open">
+              <polygon class="ink" points="-11,-6 -2,-10 10,-7 11,4 2,9 -10,6"/>
+              <circle r="7.2" class="eye-ring"/>
+              <g class="pupil"><circle r="5.2" class="iris"/><circle r="1.7" class="glint"/></g>
+            </g>
+            <path class="eye-closed" d="M-9,-1 Q0,6 9,-1 M-9,-1 L-12,-5 M9,-1 L12,-5"/>
+          </g>
+          <g class="eye" id="eyeR" transform="translate(135,127)">
+            <g class="eye-open">
+              <polygon class="ink" points="-11,-7 2,-10 11,-6 10,6 -2,9 -11,4"/>
+              <circle r="7.2" class="eye-ring"/>
+              <g class="pupil"><circle r="5.2" class="iris"/><circle r="1.7" class="glint"/></g>
+            </g>
+            <path class="eye-closed" d="M-9,-1 Q0,6 9,-1 M-9,-1 L-12,-5 M9,-1 L12,-5"/>
+          </g>
+        </g>
+        <g id="mouths">
+          <polyline class="mouth m-neutral" points="110,151 115,148 119,151 124,148 128,151 132,149"/>
+          <polygon class="mouth m-happy teeth" points="104,146 140,146 133,150 127,147 121,153 115,147 109,150"/>
+          <polygon class="mouth m-shock teeth" points="114,146 128,146 121,156"/>
+          <polyline class="mouth m-sleep" points="113,151 118,152 123,151 128,152"/>
+        </g>
+      </g>
+          <g class="mouth m-shock">
+            <polygon class="ink" points="113,141 129,141 121,153"/>
+            <polygon class="teeth" points="115,142 121,142 118,148"/>
+          </g>
+          <polyline class="mouth m-sleep" points="114,146 118,147 122,146 126,147 129,146"/>
+        </g>
+      </g>
+
+      <!-- 刘海（前层），压在脸上 -->
+      <g id="bangs">
+        <polygon id="bangShape" class="hair-fill"
+          points="88,94 104,92 98,118 112,98 120,122 126,96 140,116 136,94 156,96 146,126 160,100 166,92 150,84 100,84"/>
+        <rect class="glitter gA" clip-path="url(#bangClip)" x="80" y="80" width="90" height="50" fill="url(#glitterA)"/>
+        <polygon class="ink" points="118,90 124,90 121,114"/>
+      </g>
+
+      <g id="zzz"><text x="166" y="96">z</text><text x="180" y="78">z</text><text x="196" y="58">Z</text></g>
+      <g id="hearts"><text x="62" y="70">!</text><text x="176" y="62">✦</text></g>
+    </g>
+  </svg>
+</div>
+<script src="pet.js"></script>
+</body>
+</html>
