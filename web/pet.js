@@ -85,27 +85,35 @@
   }
 
   // ---------- 电流 ----------
-  // 身上随机的锯齿电弧：两组交替闪，每次化成电流都重新生成
+  // 身上冒出的小电光：和身体同一个画法——锯齿折线撑成两头尖的粉红多边形，左下错开一层紫描边。
+  // 两组交替闪，每次化成电流都重新生成
   const zapGroups = document.querySelectorAll('#zapsvg g');
+  function arcPolygon() {
+    let x = 100 + Math.random() * 62, y = 130 + Math.random() * 400;
+    const a = (Math.random() - 0.5) * 1.4 + (Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2);
+    const dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
+    const n = 4 + Math.floor(Math.random() * 3), seg = 9 + Math.random() * 6;
+    const left = [], right = [];
+    for (let k = 0; k <= n; k++) {
+      const off = (k % 2 ? 1 : -1) * (4 + Math.random() * 5);
+      const px = x + dx * seg * k + nx * off, py = y + dy * seg * k + ny * off;
+      const w = k === 0 || k === n ? 0 : 1.6 + Math.random() * 2.2;
+      left.push([px + nx * w, py + ny * w]);
+      right.unshift([px - nx * w, py - ny * w]);
+    }
+    return left.concat(right).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  }
   function seedArcs() {
     zapGroups.forEach(g => {
       g.replaceChildren();
       for (let i = 0; i < 4; i++) {
-        let x = 100 + Math.random() * 62, y = 130 + Math.random() * 400;
-        const pts = [[x, y]];
-        for (let k = 0; k < 5 + Math.random() * 4; k++) {
-          const a = Math.PI / 2 + (Math.random() - 0.5) * 2.2;
-          const len = 8 + Math.random() * 12;
-          x += Math.cos(a) * len * (Math.random() < 0.5 ? -1 : 1);
-          y += Math.sin(a) * len * (Math.random() < 0.5 ? -1 : 1);
-          pts.push([x, y]);
-        }
-        const str = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-        for (const cls of ['zap-glow', 'zap-core']) {
-          const l = document.createElementNS(SVG_NS, 'polyline');
-          l.setAttribute('points', str);
-          l.setAttribute('class', cls);
-          g.appendChild(l);
+        const pts = arcPolygon();
+        for (const cls of ['zap-ol', 'zap-fill']) {
+          const p = document.createElementNS(SVG_NS, 'polygon');
+          p.setAttribute('points', pts);
+          p.setAttribute('class', cls);
+          if (cls === 'zap-ol') p.setAttribute('transform', 'translate(-1.5,1.5)');
+          g.appendChild(p);
         }
       }
     });

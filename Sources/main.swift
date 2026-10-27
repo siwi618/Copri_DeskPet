@@ -272,10 +272,13 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         NSPoint(x: f.minX + 131 * scale, y: f.maxY - 360 * scale)
     }
 
-    // 一道锯齿状的红色电流：头先冲到终点、尾巴随后跟上，路径不停抖动。
+    // 一道动漫画风的电流：和 Copri 身体同一个画法——锯齿折线撑成有粗细的多边形（两头尖、中间粗，
+    // 拐角处戳出带折角的尖刺），填她身上的粉红，左下错开一层紫色描边，里面撒白色闪粉，不发光。
+    // 先从起点往终点「长」出来，停一拍再从起点收掉；形状每 0.08 秒换一帧，像动画里一拍三的闪烁。
     // 用 Core Animation 在一个临时的透明窗口里画，全程由 GPU 合成，几乎不占 CPU
     private func showBolt(from a: NSPoint, to b: NSPoint, done: @escaping () -> Void) {
-        let pad: CGFloat = 40
+        let s = scale
+        let pad = 90 * s + 24
         let rect = NSRect(x: min(a.x, b.x) - pad, y: min(a.y, b.y) - pad,
                           width: abs(a.x - b.x) + pad * 2, height: abs(a.y - b.y) + pad * 2)
         let w = NSWindow(contentRect: rect, styleMask: .borderless, backing: .buffered, defer: false)
@@ -285,6 +288,7 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         w.level = .floating
         w.ignoresMouseEvents = true
         w.isReleasedWhenClosed = false
+        w.animationBehavior = .none
         w.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         let view = NSView(frame: NSRect(origin: .zero, size: rect.size))
         view.wantsLayer = true
@@ -292,16 +296,48 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
 
         let p0 = CGPoint(x: a.x - rect.minX, y: a.y - rect.minY)
         let p1 = CGPoint(x: b.x - rect.minX, y: b.y - rect.minY)
-        // 主电流 + 两股更细的电丝，各自抖动，看起来噼啪作响
-        let mainPaths = (0..<4).map { _ in Self.boltPath(from: p0, to: p1, amp: 26) }
-        let duration = min(0.55, 0.28 + Double(hypot(p1.x - p0.x, p1.y - p0.y)) / 5000)
-        let red = CGColor(red: 0.89, green: 0.19, blue: 0.31, alpha: 1)
-        let pink = CGColor(red: 1, green: 0.42, blue: 0.6, alpha: 1)
-        let strands: [(CGFloat, CGColor, Float, Bool, [CGPath])] = [
-            (18, pink, 0.3, true, mainPaths), (7, red, 1, true, mainPaths), (2.4, .white, 0.95, false, mainPaths),
-            (2, pink, 0.9, true, (0..<4).map { _ in Self.boltPath(from: p0, to: p1, amp: 34) }),
-            (1.6, red, 0.9, true, (0..<4).map { _ in Self.boltPath(from: p0, to: p1, amp: 40) }),
+        let frames = (0..<3).map { _ in Self.boltShape(from: p0, to: p1, s: s) }
+        let duration = min(0.55, 0.32 + Double(hypot(p1.x - p0.x, p1.y - p0.y)) / 6000)
+        let pink = CGColor(red: 0.894, green: 0.188, blue: 0.314, alpha: 1)   // --hair #e43050
+        let purple = CGColor(red: 0.545, green: 0.310, blue: 0.941, alpha: 1) // --hair-ol #8b4ff0
+
+        let bolt = CALayer()
+        bolt.frame = view.bounds
+        view.layer?.addSublayer(bolt)
+        // 紫描边：和身体一样往左下错开 2.5 个网页单位
+        let layers: [(CGColor, CGPoint, KeyPath<(body: CGPath, specks: CGPath), CGPath>)] = [
+            (purple, CGPoint(x: -2.5 * s, y: -2.5 * s), \.body),
+            (pink, .zero, \.body),
+            (CGColor(red: 1, green: 1, blue: 1, alpha: 0.85), .zero, \.specks),
         ]
+        for (color, offset, part) in layers {
+            let l = CAShapeLayer()
+            l.frame = view.bounds.offsetBy(dx: offset.x, dy: offset.y)
+            l.path = frames[0][keyPath: part]
+            l.fillColor = color
+            l.strokeColor = nil
+            let flicker = CAKeyframeAnimation(keyPath: "path")
+            flicker.values = frames.map { $0[keyPath: part] }
+            flicker.calculationMode = .discrete
+            flicker.duration = 0.24
+            flicker.repeatCount = .infinity
+            l.add(flicker, forKey: "flicker")
+            bolt.addSublayer(l)
+        }
+        // 遮罩沿起点→终点的直线推进：头先冲到终点，停一拍，尾巴再从起点收掉
+        let mask = CAShapeLayer()
+        mask.frame = view.bounds
+        let line = CGMutablePath()
+        line.move(to: p0)
+        line.addLine(to: p1)
+        mask.path = line
+        mask.strokeColor = .black
+        mask.fillColor = nil
+        mask.lineWidth = pad * 2
+        mask.lineCap = .square
+        mask.strokeStart = 1
+        mask.strokeEnd = 1
+        bolt.mask = mask
 
         CATransaction.begin()
         CATransaction.setCompletionBlock { [weak self] in
@@ -309,64 +345,114 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
             self?.boltWindow = nil
             done()
         }
-        for (width, color, alpha, glow, paths) in strands {
-            let l = CAShapeLayer()
-            l.frame = view.bounds
-            l.path = paths[0]
-            l.fillColor = nil
-            l.strokeColor = color
-            l.lineWidth = width
-            l.opacity = alpha
-            l.lineJoin = .miter
-            l.lineCap = .round
-            // 动画结束后的状态：整条已经流走
-            l.strokeStart = 1
-            l.strokeEnd = 1
-            if glow {
-                l.shadowColor = red
-                l.shadowRadius = 10
-                l.shadowOpacity = 1
-                l.shadowOffset = .zero
-            }
-            view.layer?.addSublayer(l)
-            let head = CAKeyframeAnimation(keyPath: "strokeEnd")
-            head.values = [0, 1, 1]
-            head.keyTimes = [0, 0.6, 1]
-            head.duration = duration
-            let tail = CAKeyframeAnimation(keyPath: "strokeStart")
-            tail.values = [0, 0, 1]
-            tail.keyTimes = [0, 0.45, 1]
-            tail.duration = duration
-            let jitter = CAKeyframeAnimation(keyPath: "path")
-            jitter.values = paths
-            jitter.calculationMode = .discrete
-            jitter.duration = 0.16
-            jitter.repeatCount = .infinity
-            let group = CAAnimationGroup()
-            group.animations = [head, tail, jitter]
-            group.duration = duration
-            l.add(group, forKey: "bolt")
-        }
+        let head = CAKeyframeAnimation(keyPath: "strokeEnd")
+        head.values = [0, 1, 1]
+        head.keyTimes = [0, 0.45, 1]
+        head.duration = duration
+        let tail = CAKeyframeAnimation(keyPath: "strokeStart")
+        tail.values = [0, 0, 1]
+        tail.keyTimes = [0, 0.6, 1]
+        tail.duration = duration
+        let group = CAAnimationGroup()
+        group.animations = [head, tail]
+        group.duration = duration
+        mask.add(group, forKey: "strike")
         CATransaction.commit()
         w.orderFrontRegardless()
         boltWindow = w
     }
 
-    private static func boltPath(from a: CGPoint, to b: CGPoint, amp maxAmp: CGFloat) -> CGPath {
-        let path = CGMutablePath()
+    /// 生成一帧电流：body 是粉红多边形（主干 + 尖刺），specks 是里面的白色闪粉
+    private static func boltShape(from a: CGPoint, to b: CGPoint, s: CGFloat) -> (body: CGPath, specks: CGPath) {
         let dx = b.x - a.x, dy = b.y - a.y
         let len = max(1, hypot(dx, dy))
-        let nx = -dy / len, ny = dx / len
-        let n = max(5, Int(len / 22))
-        let amp = min(maxAmp, len * 0.07)
-        path.move(to: a)
-        for i in 1..<n {
-            let t = CGFloat(i) / CGFloat(n)
-            let off = CGFloat.random(in: -amp...amp)
-            path.addLine(to: CGPoint(x: a.x + dx * t + nx * off, y: a.y + dy * t + ny * off))
+        let ux = dx / len, uy = dy / len, nx = -uy, ny = ux
+        // 主干：长短不一的折线，大体左右交替但不死板，折角尖
+        var ts: [CGFloat] = [0]
+        while ts.last! < 1 { ts.append(ts.last! + (48 * s + 14) / len * .random(in: 0.5...1.6)) }
+        ts[ts.count - 1] = 1
+        let amp = min(34 * s + 8, len * 0.14)
+        var spine = [a]
+        var side: CGFloat = Bool.random() ? 1 : -1
+        for t in ts.dropFirst().dropLast() {
+            side = Double.random(in: 0..<1) < 0.8 ? -side : side
+            let off = side * amp * .random(in: 0.3...1)
+            spine.append(CGPoint(x: a.x + dx * t + nx * off, y: a.y + dy * t + ny * off))
         }
-        path.addLine(to: b)
-        return path
+        spine.append(b)
+
+        // 粗细：两头收成尖，中间粗；两侧各自随机，边缘不平行，像一块块碎片拼起来
+        let wMax = 30 * s + 5
+        var left = [CGPoint](), right = [CGPoint](), widths = [CGFloat]()
+        for (i, p) in spine.enumerated() {
+            let t = CGFloat(i) / CGFloat(spine.count - 1)
+            let end = i == 0 || i == spine.count - 1
+            let base = wMax * (0.35 + 0.65 * sin(.pi * t))
+            let wl = end ? 0 : base * .random(in: 0.12...0.8), wr = end ? 0 : base * .random(in: 0.12...0.8)
+            let prev = spine[max(0, i - 1)], next = spine[min(spine.count - 1, i + 1)]
+            let tl = max(0.001, hypot(next.x - prev.x, next.y - prev.y))
+            let px = -(next.y - prev.y) / tl, py = (next.x - prev.x) / tl
+            left.append(CGPoint(x: p.x + px * wl, y: p.y + py * wl))
+            right.append(CGPoint(x: p.x - px * wr, y: p.y - py * wr))
+            widths.append(wl + wr)
+        }
+        let body = CGMutablePath()
+        addPolygon(body, left + right.reversed())
+
+        // 分叉：一部分折角处朝外戳出一根微微折一下的长尖刺
+        func spike(from p: CGPoint, dir: (CGFloat, CGFloat), length L: CGFloat, half: CGFloat, depth: Int) {
+            let (bx, by) = dir
+            let kink = CGFloat.random(in: -0.35...0.35)
+            let mid = CGPoint(x: p.x + bx * L * 0.5 - by * kink * L * 0.3, y: p.y + by * L * 0.5 + bx * kink * L * 0.3)
+            let tip = CGPoint(x: mid.x + (bx * 0.8 + by * kink * 0.5) * L * 0.5, y: mid.y + (by * 0.8 - bx * kink * 0.5) * L * 0.5)
+            addPolygon(body, [CGPoint(x: p.x - by * half, y: p.y + bx * half),
+                              CGPoint(x: mid.x - by * half * 0.55, y: mid.y + bx * half * 0.55),
+                              tip,
+                              CGPoint(x: mid.x + by * half * 0.55, y: mid.y - bx * half * 0.55),
+                              CGPoint(x: p.x + by * half, y: p.y - bx * half)])
+            if depth > 0 && L > 30 * s + 10 {
+                let turn = CGFloat.random(in: 0.5...0.9) * (Bool.random() ? 1 : -1)
+                let cx = bx * cos(turn) - by * sin(turn), cy = bx * sin(turn) + by * cos(turn)
+                spike(from: mid, dir: (cx, cy), length: L * 0.45, half: half * 0.5, depth: depth - 1)
+            }
+        }
+        for i in 1..<(spine.count - 1) where Double.random(in: 0..<1) < 0.4 {
+            let p = spine[i]
+            let side: CGFloat = ((p.x - a.x) * nx + (p.y - a.y) * ny) >= 0 ? 1 : -1
+            let fwd = CGFloat.random(in: -0.2...1.1)
+            var bx = nx * side + ux * fwd, by = ny * side + uy * fwd
+            let bl = hypot(bx, by)
+            bx /= bl; by /= bl
+            spike(from: p, dir: (bx, by), length: CGFloat.random(in: 24...56) * s + 8,
+                  half: max(1.5, widths[i] * 0.3), depth: 0)
+        }
+
+        // 白色闪粉：沿主干撒在粉红里面
+        let specks = CGMutablePath()
+        for _ in 0..<Int(len / 7) {
+            let i = Int.random(in: 1..<(spine.count - 1))
+            let j = Bool.random() ? i - 1 : i + 1
+            let t = CGFloat.random(in: 0...1)
+            let q = CGPoint(x: spine[i].x + (spine[j].x - spine[i].x) * t, y: spine[i].y + (spine[j].y - spine[i].y) * t)
+            let lim = min(widths[i], widths[j]) * 0.2
+            let o = CGFloat.random(in: -lim...max(-lim, lim))
+            let r = CGFloat.random(in: 0.5...1.4) * max(1, s * 1.6)
+            let c = CGPoint(x: q.x + nx * o, y: q.y + ny * o)
+            addPolygon(specks, [CGPoint(x: c.x, y: c.y + r), CGPoint(x: c.x + r * 0.8, y: c.y),
+                                CGPoint(x: c.x, y: c.y - r * 0.9), CGPoint(x: c.x - r * 0.7, y: c.y)])
+        }
+        return (body, specks)
+    }
+
+    /// 多边形统一成同一个绕向再加进路径，免得重叠处按非零规则被挖空
+    private static func addPolygon(_ path: CGMutablePath, _ pts: [CGPoint]) {
+        var area: CGFloat = 0
+        for k in pts.indices {
+            let p = pts[k], q = pts[(k + 1) % pts.count]
+            area += p.x * q.y - q.x * p.y
+        }
+        path.addLines(between: area < 0 ? pts.reversed() : pts)
+        path.closeSubpath()
     }
 
     private func setFacing(_ s: String) {

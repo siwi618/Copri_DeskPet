@@ -231,8 +231,9 @@ html, body {
    到了以后从细线里弹出来，压扁一下再站稳（zap-in）。中间那道闪电由 Swift 用 Core Animation 画 */
 #zapsvg { display: none; }
 .zap-out #zapsvg, .zap-in #zapsvg { display: block; }
-#zapsvg g { animation: crackle .12s steps(2) infinite; }
-#zapsvg g + g { animation-delay: .06s; }
+/* 一拍三：每组 0.16 秒里亮一半、灭一半，两组错开，像动画里的电光闪烁 */
+#zapsvg g { animation: crackle .16s steps(1) infinite; }
+#zapsvg g + g { animation-delay: .08s; }
 .zap-out #pet { animation: zapOut .3s ease-in forwards; }
 .zap-in #pet { animation: zapIn .45s ease-out both; }
 .zap-out #shadow, .zap-in #shadow { animation: none; opacity: 0; }
@@ -247,10 +248,9 @@ html, body {
   68% { transform: translateY(-2px) scale(.97, 1.04); }
   100% { transform: none; opacity: 1; }
 }
-@keyframes crackle { 0% { opacity: 1; } 100% { opacity: .15; } }
-#zapsvg polyline { fill: none; stroke-linejoin: miter; stroke-linecap: round; }
-#zapsvg .zap-glow { stroke: #ff2f5f; stroke-width: 5; opacity: .85; }
-#zapsvg .zap-core { stroke: #fff2f5; stroke-width: 1.8; }
+@keyframes crackle { 0% { opacity: 1; } 50% { opacity: 0; } }
+#zapsvg .zap-ol { fill: var(--hair-ol); }
+#zapsvg .zap-fill { fill: var(--hair); }
 
 /* 转圈 */
 .spin #pet { animation: spin .8s cubic-bezier(.5, 0, .3, 1); }
