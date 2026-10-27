@@ -45,10 +45,13 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
     // 走路：起步时间和当前速度（先蹲一下蓄力再加速，快到时减速）
     private var walkStart: Date?
     private var walkSpeed: CGFloat = 0
-    // 长距离化成电流：超过 zapDistance（屏幕点）就不走了，变成一道红色电流过去
-    private let zapDistance: CGFloat = 360
+    // 长距离化成电流：超过 zapDistance（屏幕点）就不走了，变成一道红色电流过去；走路只走很短的一段
+    private let zapDistance: CGFloat = 220
     private var zapping = false
     private var boltWindow: NSWindow?
+    // 坐着歇一会儿：游荡途中偶尔坐下；待在原地/跟随鼠标时闲置 25 秒坐下
+    private var sitting = false
+    private var idleSince = Date()
 
     override init() {
         let s = defaults.double(forKey: "scale")
@@ -177,11 +180,26 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
             target = NSPoint(x: mouse.x + 24, y: mouse.y - f.height * 0.85)
             maxSpeed = 150
         case .wander:
-            if target == nil && now > nextWander { target = wanderTarget(from: f) }
+            if target == nil && now > nextWander {
+                if sitting {
+                    // 歇够了：先站起来，等起身动作做完再出发
+                    stand()
+                    nextWander = now.addingTimeInterval(0.7)
+                } else if Double.random(in: 0..<1) < 0.3 {
+                    sit()
+                    nextWander = now.addingTimeInterval(.random(in: 30...75))
+                } else {
+                    target = wanderTarget(from: f)
+                }
+            }
             maxSpeed = 75
         }
 
-        guard let t = target else { stopWalking(); return }
+        guard let t = target else {
+            stopWalking()
+            if mode != .wander && !sitting && now.timeIntervalSince(idleSince) > 25 { sit() }
+            return
+        }
         let dx = t.x - f.minX, dy = t.y - f.minY
         let dist = hypot(dx, dy)
         // 跟随模式留一点余量：离得近就站着，拉开一段再起步，免得原地抽动
@@ -194,8 +212,10 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
             return
         }
         if walkStart == nil {
-            walkStart = now
+            // 坐着的话先站起来（JS 收到 move-* 会自己起身），多等一会儿再迈步
+            walkStart = sitting ? now.addingTimeInterval(0.4) : now
             walkSpeed = 0
+            sitting = false
         }
         // 朝向看左右；几乎竖直走的时候保持原来的朝向
         setFacing(abs(dx) < 6 ? (facing.isEmpty ? "move-right" : facing) : (dx < 0 ? "move-left" : "move-right"))
@@ -216,20 +236,23 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
             saveOrigin()
         }
         stopWalking()
+        // 跟随模式下鼠标一直不动，站久了也坐下
+        if mode == .follow && !sitting && Date().timeIntervalSince(idleSince) > 25 { sit() }
     }
 
     private func stopWalking() {
+        if walkStart != nil { idleSince = Date() }
         walkStart = nil
         walkSpeed = 0
         setFacing("")
     }
 
-    // 游荡目的地：多数是附近走得到的地方，偶尔去屏幕另一头（化成电流过去）
+    // 游荡目的地：少数是附近几步路的地方（走过去），多数去屏幕上更远的地方（化成电流过去）
     private func wanderTarget(from f: NSRect) -> NSPoint {
         let vf = (panel.screen ?? NSScreen.main)?.visibleFrame ?? f
         let maxX = max(vf.minX, vf.maxX - f.width), maxY = max(vf.minY, vf.maxY - f.height)
-        if Double.random(in: 0..<1) < 0.65 {
-            let a = CGFloat.random(in: 0..<(2 * .pi)), r = CGFloat.random(in: 120...300)
+        if Double.random(in: 0..<1) < 0.3 {
+            let a = CGFloat.random(in: 0..<(2 * .pi)), r = CGFloat.random(in: 70...180)
             return NSPoint(x: min(max(f.minX + cos(a) * r, vf.minX), maxX),
                            y: min(max(f.minY + sin(a) * r * 0.5, vf.minY), maxY))
         }
@@ -238,8 +261,20 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
 
     // MARK: - 化成电流
 
+    private func sit() {
+        sitting = true
+        js("copri.sit()")
+    }
+
+    private func stand() {
+        sitting = false
+        idleSince = Date()
+        js("copri.stand()")
+    }
+
     private func zap(to t: NSPoint) {
         zapping = true
+        sitting = false
         walkStart = nil
         walkSpeed = 0
         facing = ""
@@ -468,6 +503,11 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
         lastInteraction = Date()
+        // 点击、拖拽都会让她站起来（JS 那边自己处理起身动作）
+        if type != "ready" && type != "menu" {
+            sitting = false
+            idleSince = Date()
+        }
         switch type {
         case "ready":
             ready = true

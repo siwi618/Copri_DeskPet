@@ -93,24 +93,41 @@
         <g id="body">
           <!-- 紫色描边全部放最底下（躯干 + 四肢），填色都画在上面：只在整个人的外轮廓露出紫边，
                四肢和躯干之间不再出现紫线，看起来是一整个身体。四肢描边用 p-* class 跟着四肢一起动 -->
-          <g class="limb p-legL"><use href="#legLShape" class="ol" transform="translate(-2.5,2.5)"/></g>
-          <g class="limb p-legR"><use href="#legRShape" class="ol" transform="translate(-2.5,2.5)"/></g>
-          <g class="limb p-armL"><use href="#armLShape" class="ol" transform="translate(-2.5,2.5)"/></g>
-          <g class="limb p-armR"><use href="#armRShape" class="ol" transform="translate(-2.5,2.5)"/></g>
-          <use href="#torsoShape" class="ol" transform="translate(-2.5,2.5)"/>
-          <g id="legL" class="limb p-legL">
+          <g class="limb stand p-legL"><use href="#legLShape" class="ol" transform="translate(-2.5,2.5)"/></g>
+          <g class="limb stand p-legR"><use href="#legRShape" class="ol" transform="translate(-2.5,2.5)"/></g>
+          <g class="limb stand p-armL"><use href="#armLShape" class="ol" transform="translate(-2.5,2.5)"/></g>
+          <g class="limb stand p-armR"><use href="#armRShape" class="ol" transform="translate(-2.5,2.5)"/></g>
+          <g class="p-torso"><use href="#torsoShape" class="ol" transform="translate(-2.5,2.5)"/></g>
+          <!-- 坐姿（.sit）：躯干下沉前倾，换成这一套四肢。盘腿：右腿往右屈膝、小腿横在前面，右脚枕在左大腿下面
+               （脚尖从左边露出来）；左腿从膝盖垂下来；左手肘抵着左膝盖、小臂垂下；右手肘抵着右膝盖、小臂往上托着下巴 -->
+          <g id="sitUnder" class="sitpose">
+            <g class="ol" transform="translate(-2.5,2.5)">
+              <polygon points="131,386 152,376 172,366 188,366 195,376 192,388 168,398 148,405 131,407"/><polygon points="193,382 186,393 160,408 132,421 118,430 104,432 103.5,426.5 117,423 130,414 156,400 178,386 186,376"/><polygon points="105,388 108,377 131,388 131,404 128,414 128.5,440 125.5,470 122.5,495 121,510 115.5,522.5 110.5,521.5 113,506 116.5,495 115,470 111.5,440 113,417 106,410"/><polygon points="103,316 112,320 113,360 110,398 106,407 102.5,450 103.2,456 103,468 101.4,468 101.4,458 100.6,458 100.6,471 99,471 99,458 98.2,458 98.2,470 96.6,470 96.6,457 95.8,457 95.8,466 94.4,466 94.4,455 95,449 98.5,410 100,398 101,360"/><polygon points="151,318 160,316 172,336 190,358 189,368 181,369 165,343 154,330"/>
+            </g>
+            <polygon class="glit" points="131,386 152,376 172,366 188,366 195,376 192,388 168,398 148,405 131,407"/>
+            <polygon class="ink" points="131,392 152,382 156,389 131,400"/>
+            <polygon class="glit" points="193,382 186,393 160,408 132,421 118,430 104,432 103.5,426.5 117,423 130,414 156,400 178,386 186,376"/>
+            <polyline class="crease" points="190,381 178,387 156,400 131,413"/>
+            <polygon class="ink" points="105,388 108,377 131,388 131,404 128,414 128.5,440 125.5,470 122.5,495 121,510 115.5,522.5 110.5,521.5 113,506 116.5,495 115,470 111.5,440 113,417 106,410"/>
+            <polygon class="green" points="105.4,395 131,399 131,406.5 106,402.5"/>
+            <polygon class="glit" points="151,318 160,316 172,336 190,358 189,368 181,369 165,343 154,330"/>
+            <polygon class="ink" points="155.5,331 166,325 170,333 160,339"/>
+            <polygon class="ink" points="103,316 112,320 113,360 110,398 106,407 102.5,450 103.2,456 103,468 101.4,468 101.4,458 100.6,458 100.6,471 99,471 99,458 98.2,458 98.2,470 96.6,470 96.6,457 95.8,457 95.8,466 94.4,466 94.4,455 95,449 98.5,410 100,398 101,360"/>
+            <polygon class="green" points="102.5,315 113,317 114,334 101.5,338"/>
+          </g>
+          <g id="legL" class="limb stand p-legL">
             <use href="#legLShape" class="ink"/>
             <g clip-path="url(#legLClip)"><polygon class="green" points="100,285 135,291.5 135,304 100,297.5"/></g>
             <!-- 大腿根：紧贴胯下的一圈黑带，上面鞋带状红线；两条腿各自一圈，不连在一起 -->
             <g clip-path="url(#legLClip)"><polygon class="ink" points="106,261 133,267 133,281 106,275"/><polyline class="lace" points="110.0,266.5 115.2,274.8 120.5,269.0 125.8,277.2 131.0,271.5"/><polyline class="lace" points="110.0,273.5 115.2,267.8 120.5,276.0 125.8,270.2 131.0,278.5"/></g>
           </g>
-          <g id="legR" class="limb p-legR">
+          <g id="legR" class="limb stand p-legR">
             <use href="#legRShape" class="glit"/>
             <g clip-path="url(#legRClip)"><polygon class="ink" points="164,281 124,297.5 164,321.5 164,314 133,297.5 164,288.5"/></g>
             <g clip-path="url(#legRClip)"><polygon class="ink" points="156,261 129,267 129,281 156,275"/><polyline class="lace" points="152.0,266.5 146.8,274.8 141.5,269.0 136.2,277.2 131.0,271.5"/><polyline class="lace" points="152.0,273.5 146.8,267.8 141.5,276.0 136.2,270.2 131.0,278.5"/></g>
           </g>
                     <!-- 手臂（画在躯干下面，从肩膀底下伸出来）：上臂细直，手肘外侧尖角，小臂稍粗收到手腕，手臂从肩膀往外张约 4°、手垂在大腿外侧；手掌从手腕往下放宽，拇指单独斜出，手指像薯条：等宽的直条、指尖平切，四根并拢留细缝，长短不一。左臂黑、肩头一圈绿环；右臂红、上臂一圈黑环 -->
-          <g id="arms">
+          <g id="arms" class="stand">
             <g id="armL" class="limb p-armL">
               <use href="#armLShape" class="ink"/>
             </g>
@@ -119,6 +136,7 @@
               <g clip-path="url(#armRClip)"><polygon class="ink" points="140,201 172,196 172,207 140,212"/></g>
             </g>
           </g>
+          <g class="p-torso">
           <rect class="ink" x="128.5" y="158" width="5" height="16"/>
           <use href="#torsoShape" class="ink"/>
           <g clip-path="url(#torsoClip)">
@@ -142,8 +160,14 @@
             <polygon class="glit" points="127.6,172 136.7,172 136.7,175.1 129.9,175.1 129.9,178.2 135.3,178.2 135.3,181 129.9,181 129.9,187.6 127.6,187.6"/>
             <polygon class="green" points="118.1,177.8 125.3,179.8 123,184.9 117.3,183.7"/>
           </g>
+          </g>
           <!-- 左肩一整圈绿：裁到左臂形状里、盖在躯干上，肩头整块绿，下沿斜切 -->
-          <g class="limb p-armL"><g clip-path="url(#armLClip)"><polygon class="green" points="90,160 125,160 125,190 90,198"/></g></g>
+          <g class="limb stand p-armL"><g clip-path="url(#armLClip)"><polygon class="green" points="90,160 125,160 125,190 90,198"/></g></g>
+          <!-- 坐姿的右小臂：从右膝盖上的手肘往上，手掌托着下巴（压在身体上面、脸下面） -->
+          <g id="sitOver" class="sitpose">
+            <polygon class="ol" points="191,360 184,370 148,339 140,337 131,333 128.5,325 130,316 140,315 148,322 154,328" transform="translate(-2.5,2.5)"/>
+            <polygon class="glit" points="191,360 184,370 148,339 140,337 131,333 128.5,325 130,316 140,315 148,322 154,328"/>
+          </g>
         </g>
 
 

@@ -15,6 +15,7 @@
     drop: ['哼……', '这回不是……'],
     wake: ['嗯？……我没睡！', '什么？'],
     sleep: ['你先睡会吧……不对，是我先睡'],
+    sit: ['歇会儿～', '好——无——聊——', '嗯……在想事情', '坐一下下'],
   };
 
   function post(msg) {
@@ -69,6 +70,8 @@
 
   function setState(s) {
     const prev = state;
+    // 要走、被拎起来：先从坐姿站起来
+    if (s === 'drag' || s.startsWith('move-')) root.classList.remove('sit');
     root.classList.remove('idle', 'sleep', 'drag', 'move-left', 'move-right');
     state = s;
     root.classList.add(s);
@@ -194,6 +197,13 @@
   });
 
   function onClick() {
+    if (root.classList.contains('sit') && state !== 'sleep') {
+      // 坐着被点：先站起来再蹦一下
+      root.classList.remove('sit');
+      setTimeout(() => { flash('happy', 900); sayRandom('click'); }, 450);
+      post({ type: 'interact' });
+      return;
+    }
     if (state === 'sleep') {
       setState('idle');
       sayRandom('wake');
@@ -211,7 +221,10 @@
     getState() { return state; },
     dropped() { if (state === 'drag') { setState('idle'); flash('land', 700); sayRandom('drop'); } },
     zapOut() { setState('idle'); seedArcs(); flash('zap-out', 5000); },
-    zapIn() { seedArcs(); flash('zap-in', 480); },
+    zapIn() { root.classList.remove('sit'); seedArcs(); flash('zap-in', 480); },
+    // 坐下 / 站起来（Swift 决定时机：游荡途中偶尔歇一会儿，或者待机久了）
+    sit() { if (state === 'idle' || state === 'sleep') { root.classList.add('sit'); if (Math.random() < 0.4) sayRandom('sit'); } },
+    stand() { root.classList.remove('sit'); },
     sleep() { setState('sleep'); sayRandom('sleep'); },
     wake() { if (state === 'sleep') { setState('idle'); sayRandom('wake'); } },
     talk() { flash('happy', 900); sayRandom('idle'); },

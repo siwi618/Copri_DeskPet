@@ -73,7 +73,7 @@ html, body {
 /* ---------- 基础动作 ---------- */
 #pet { transform-origin: 131px 400px; animation: float 3.2s ease-in-out infinite; }
 #shadow { transform-origin: 131px 556px; animation: shadow 3.2s ease-in-out infinite; }
-#hairwrap { transform-origin: 131px 235px; animation: flicker 3.6s ease-in-out infinite; }
+#hairwrap { transform-origin: 131px 220px; animation: flicker 3.6s ease-in-out infinite; transition: transform .6s cubic-bezier(.3, .9, .35, 1.08); }
 #bangs { transform-origin: 131px 106px; }
 /* 状态切换用带回弹的缓动：先冲过头一点再落回来，不再是线性硬切 */
 #head { transform-origin: 131px 144px; transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
@@ -250,6 +250,19 @@ html, body {
 }
 @keyframes crackle { 0% { opacity: 1; } 50% { opacity: 0; } }
 #zapsvg .zap-fill { fill: var(--hair); }
+
+/* 坐下（.sit，待机久了随机出现）：躯干往下沉、往前倾（纵向压扁），头和头发跟着下来、歪向托着下巴的右手；
+   站姿四肢淡出、坐姿四肢淡入。坐着时不再上下飘 */
+.p-torso { transform-origin: 131px 272px; transition: transform .6s cubic-bezier(.3, .9, .35, 1.08); }
+.stand { transition: transform .45s cubic-bezier(.34, 1.56, .64, 1), opacity .25s, visibility 0s; }
+.sitpose { opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s .25s; }
+.sit .stand { opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s .25s; }
+.sit .sitpose { opacity: 1; visibility: visible; transition: opacity .3s .2s, visibility 0s .2s; }
+.sit .p-torso { transform: translate(0px, 125px) scale(1, .72); }
+.sit #head, .sit.sleep #head { transform: translate(6px, 155px) rotate(12deg); transition: transform .6s cubic-bezier(.3, .9, .35, 1.08); }
+.sit #hairwrap { animation: none; transform: translate(6px, 155px) rotate(12deg); }
+.sit #pet { animation: none; }
+.crease { fill: none; stroke: var(--ink); stroke-width: .9; stroke-linejoin: round; }
 
 /* 转圈 */
 .spin #pet { animation: spin .8s cubic-bezier(.5, 0, .3, 1); }
