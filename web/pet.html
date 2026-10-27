@@ -68,10 +68,9 @@
 
         <!-- 头发（后层）：轮廓从原图 general/08.29.28 自动描出（红色部分，含发束间的缝隙），按脸的位置对齐缩放 -->
         <g id="hair" transform="translate(0,10)">
-          <!-- 头发暗面（照 hair/18.43.04）：红发下面压着一层更厚的黑，往左下错开，在每束头发朝下的边缘露出一截锯齿状的黑；
-               紫色只是贴在黑色最外缘的一道细线 -->
-          <use href="#hairShape" class="hair-ol" transform="translate(-4.4,6.4)"/>
-          <use href="#hairShape" class="ink" transform="translate(-2.4,4.6)"/>
+          <use href="#hairShape" class="hair-ol" transform="translate(-3.2,3.6)"/>
+          <!-- 底部细黑边：黑色同形状往下错开一点，只在朝下的边缘露出来 -->
+          <use href="#hairShape" class="ink" transform="translate(0,2.2)"/>
           <!-- 头发暗面：头后面压在红发下面的黑色闪电发束，只从红发底下露出来（照 08.29.28 底部，坐标按原图换算）：
                左下一大束台阶状黑发、右下一小束、脸后几根朝上的黑尖，同样带紫色错位描边 -->
           <use href="#crownShape" class="hair-ol" transform="translate(-2.4,2.6)"/>
@@ -80,13 +79,6 @@
           <rect x="0" y="-60" width="260" height="240" fill="url(#hazeGrad)" clip-path="url(#hairClip)"/>
           <rect class="glitter" x="0" y="-60" width="260" height="240" fill="url(#fineGlit)" clip-path="url(#hairClip)" mask="url(#topFade)"/>
           <g class="glitter" clip-path="url(#hairClip)" id="splatA"></g>
-          <!-- 脸后面戳出来的长黑发尖：从头顶往上、往右上放射，压在红发上面，边上带台阶缺口（照 hair/18.43.04） -->
-          <g id="crownTop">
-            <polygon class="ink" points="130,113 142,80 138,82 156,30 149.5,77 153.5,75 146,112"/>
-            <polygon class="ink" points="141,115 168,88 164,87 198,60 175,92 179,92 152,120"/>
-            <polygon class="ink" points="148,121 176,108 173,106 206,96 182,114 153,127"/>
-            <polygon class="ink" points="113,113 108,96 111,97 104,78 116,99 113,99 120,111"/>
-          </g>
         </g>
       </svg>
       <!-- 会闪的那层闪粉单独一层，只改透明度 -->
