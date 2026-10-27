@@ -630,6 +630,30 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
     }
 }
 
+// 退出原因记到 ~/Library/Logs/Copri.log（排查「自己消失」用：菜单退出 / 收到信号 / 其他）
+func exitLog(_ reason: String) {
+    let path = NSHomeDirectory() + "/Library/Logs/Copri.log"
+    let line = "\(Date()) \(reason)\n"
+    if let h = FileHandle(forWritingAtPath: path) {
+        h.seekToEndOfFile()
+        h.write(Data(line.utf8))
+        h.closeFile()
+    } else {
+        FileManager.default.createFile(atPath: path, contents: Data(line.utf8))
+    }
+}
+exitLog("launch")
+atexit { exitLog("exit") }
+NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: nil) { _ in
+    exitLog("terminate (菜单退出或系统要求)")
+}
+for sig in [SIGTERM, SIGINT, SIGHUP] {
+    signal(sig) { s in
+        exitLog("signal \(s)")
+        exit(0)
+    }
+}
+
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
 let controller = PetController()
