@@ -92,7 +92,7 @@
     let x = 100 + Math.random() * 62, y = 130 + Math.random() * 400;
     const a = (Math.random() - 0.5) * 1.4 + (Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2);
     const dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
-    const n = 4 + Math.floor(Math.random() * 3), seg = 9 + Math.random() * 6;
+    const n = 3 + Math.floor(Math.random() * 2), seg = 11 + Math.random() * 7;
     const left = [], right = [];
     for (let k = 0; k <= n; k++) {
       const off = (k % 2 ? 1 : -1) * (4 + Math.random() * 5);

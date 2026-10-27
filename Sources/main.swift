@@ -272,8 +272,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         NSPoint(x: f.minX + 131 * scale, y: f.maxY - 360 * scale)
     }
 
-    // 一道动漫画风的电流：细细的锯齿折线撑成两头尖的多边形，偶尔戳出一根尖刺，
-    // 左右零散地伴着几块像她脚边那样的不规则碎片；纯粉红平涂，不描边、不发光。
+    // 一道动漫画风的电流：细细的折线（按距离折 3～5 次）撑成两头尖的多边形，偶尔戳出一根尖刺，
+    // 一两股更细的电丝缠在主干上、来回穿过它；纯粉红平涂，不描边、不发光。
     // 先从起点往终点「长」出来，停一拍再从起点收掉；形状每 0.08 秒换一帧，像动画里一拍三的闪烁。
     // 用 Core Animation 在一个临时的透明窗口里画，全程由 GPU 合成，几乎不占 CPU
     private func showBolt(from a: NSPoint, to b: NSPoint, done: @escaping () -> Void) {
@@ -352,93 +352,84 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         boltWindow = w
     }
 
-    /// 生成一帧电流：细主干 + 少量尖刺 + 伴在左右的不规则碎片，合成一个粉红路径
+    /// 生成一帧电流：细主干（按距离折 3～5 次）+ 偶尔一根尖刺 + 一两股缠在主干上的细电丝，合成一个粉红路径
     private static func boltShape(from a: CGPoint, to b: CGPoint, s: CGFloat) -> CGPath {
         let dx = b.x - a.x, dy = b.y - a.y
         let len = max(1, hypot(dx, dy))
         let ux = dx / len, uy = dy / len, nx = -uy, ny = ux
-        // 主干：长短不一的折线，大体左右交替但不死板，折角尖
-        var ts: [CGFloat] = [0]
-        while ts.last! < 1 { ts.append(ts.last! + (48 * s + 14) / len * .random(in: 0.5...1.6)) }
-        ts[ts.count - 1] = 1
-        let amp = min(34 * s + 8, len * 0.14)
-        var spine = [a]
+        let body = CGMutablePath()
+
+        // 主干：3～5 个折角（距离越远越多），折点间距不均匀，大体左右交替
+        let bends = min(5, 3 + Int(len / 600))
+        var ts = (0..<bends).map { CGFloat($0 + 1) / CGFloat(bends + 1) + .random(in: -0.08...0.08) }
+        ts.sort()
+        let amp = min(40 * s + 10, len * 0.16)
         var side: CGFloat = Bool.random() ? 1 : -1
-        for t in ts.dropFirst().dropLast() {
+        var spine = [a]
+        for t in ts {
             side = Double.random(in: 0..<1) < 0.8 ? -side : side
-            let off = side * amp * .random(in: 0.3...1)
+            let off = side * amp * .random(in: 0.55...1)
             spine.append(CGPoint(x: a.x + dx * t + nx * off, y: a.y + dy * t + ny * off))
         }
         spine.append(b)
-
-        // 粗细：两头收成尖，中间粗；两侧各自随机，边缘不平行，像一块块碎片拼起来
         let wMax = 9 * s + 2.5
-        var left = [CGPoint](), right = [CGPoint](), widths = [CGFloat]()
-        for (i, p) in spine.enumerated() {
-            let t = CGFloat(i) / CGFloat(spine.count - 1)
-            let end = i == 0 || i == spine.count - 1
-            let base = wMax * (0.35 + 0.65 * sin(.pi * t))
-            let wl = end ? 0 : base * .random(in: 0.25...0.75), wr = end ? 0 : base * .random(in: 0.25...0.75)
-            let prev = spine[max(0, i - 1)], next = spine[min(spine.count - 1, i + 1)]
-            let tl = max(0.001, hypot(next.x - prev.x, next.y - prev.y))
-            let px = -(next.y - prev.y) / tl, py = (next.x - prev.x) / tl
-            left.append(CGPoint(x: p.x + px * wl, y: p.y + py * wl))
-            right.append(CGPoint(x: p.x - px * wr, y: p.y - py * wr))
-            widths.append(wl + wr)
+        let widths = spine.indices.map { i -> CGFloat in
+            i == 0 || i == spine.count - 1 ? 0 : wMax * (0.5 + 0.5 * sin(.pi * CGFloat(i) / CGFloat(spine.count - 1))) * .random(in: 0.6...1.1)
         }
-        let body = CGMutablePath()
-        addPolygon(body, left + right.reversed())
+        addPolygon(body, ribbon(spine, widths))
 
-        // 分叉：一部分折角处朝外戳出一根微微折一下的长尖刺
-        func spike(from p: CGPoint, dir: (CGFloat, CGFloat), length L: CGFloat, half: CGFloat, depth: Int) {
-            let (bx, by) = dir
-            let kink = CGFloat.random(in: -0.35...0.35)
-            let mid = CGPoint(x: p.x + bx * L * 0.5 - by * kink * L * 0.3, y: p.y + by * L * 0.5 + bx * kink * L * 0.3)
-            let tip = CGPoint(x: mid.x + (bx * 0.8 + by * kink * 0.5) * L * 0.5, y: mid.y + (by * 0.8 - bx * kink * 0.5) * L * 0.5)
-            addPolygon(body, [CGPoint(x: p.x - by * half, y: p.y + bx * half),
-                              CGPoint(x: mid.x - by * half * 0.55, y: mid.y + bx * half * 0.55),
-                              tip,
-                              CGPoint(x: mid.x + by * half * 0.55, y: mid.y - bx * half * 0.55),
-                              CGPoint(x: p.x + by * half, y: p.y - bx * half)])
-            if depth > 0 && L > 30 * s + 10 {
-                let turn = CGFloat.random(in: 0.5...0.9) * (Bool.random() ? 1 : -1)
-                let cx = bx * cos(turn) - by * sin(turn), cy = bx * sin(turn) + by * cos(turn)
-                spike(from: mid, dir: (cx, cy), length: L * 0.45, half: half * 0.5, depth: depth - 1)
-            }
-        }
-        for i in 1..<(spine.count - 1) where Double.random(in: 0..<1) < 0.12 {
+        // 尖刺：偶尔在某个折角朝外戳出一根
+        for i in 1..<(spine.count - 1) where Double.random(in: 0..<1) < 0.15 {
             let p = spine[i]
-            let side: CGFloat = ((p.x - a.x) * nx + (p.y - a.y) * ny) >= 0 ? 1 : -1
-            let fwd = CGFloat.random(in: -0.2...1.1)
-            var bx = nx * side + ux * fwd, by = ny * side + uy * fwd
+            let out: CGFloat = ((p.x - a.x) * nx + (p.y - a.y) * ny) >= 0 ? 1 : -1
+            let fwd = CGFloat.random(in: 0...0.9)
+            var bx = nx * out + ux * fwd, by = ny * out + uy * fwd
             let bl = hypot(bx, by)
             bx /= bl; by /= bl
-            spike(from: p, dir: (bx, by), length: CGFloat.random(in: 18...40) * s + 6,
-                  half: max(1, widths[i] * 0.35), depth: 0)
+            let L = CGFloat.random(in: 18...36) * s + 6
+            let half = max(1, widths[i] * 0.35)
+            addPolygon(body, [CGPoint(x: p.x - by * half, y: p.y + bx * half),
+                              CGPoint(x: p.x + bx * L, y: p.y + by * L),
+                              CGPoint(x: p.x + by * half, y: p.y - bx * half)])
         }
 
-        // 伴随碎片：像她脚边漂着的那种细长、带缺口台阶的不规则碎片，零零散散地落在电流左右，
-        // 大体顺着电流的方向，各自歪一点
-        for _ in 0..<max(2, Int(len / (90 * s + 30))) {
-            let t = CGFloat.random(in: 0.08...0.92)
-            let side: CGFloat = Bool.random() ? 1 : -1
-            let dist = side * (amp * 0.7 + CGFloat.random(in: 10...36) * s + 5)
-            let c = CGPoint(x: a.x + dx * t + nx * dist, y: a.y + dy * t + ny * dist)
-            let ang = atan2(uy, ux) + CGFloat.random(in: -0.6...0.6)
-            let L = CGFloat.random(in: 22...52) * s + 6, W = CGFloat.random(in: 3...7) * s + 1.5
-            // 局部坐标：沿长轴 0…L，一侧带一个台阶缺口，两头尖
-            let notch = CGFloat.random(in: 0.35...0.65)
-            let local: [(CGFloat, CGFloat)] = [
-                (0, 0), (L * 0.18, W * 0.5), (L * notch, W * 0.6), (L * (notch + 0.05), W * 0.15),
-                (L * (notch + 0.15), W * 0.55), (L, W * .random(in: -0.1...0.3)),
-                (L * 0.8, -W * 0.45), (L * 0.35, -W * 0.5), (L * 0.1, -W * 0.25),
-            ]
-            let ca = cos(ang), sa = sin(ang)
-            addPolygon(body, local.map { (x, y) in
-                CGPoint(x: c.x + (x - L / 2) * ca - y * sa, y: c.y + (x - L / 2) * sa + y * ca)
-            })
+        // 缠绕的细电丝：一两股，各占主干的一段，沿着主干走、来回穿过它，折角也是尖的，两头收尖
+        func spinePoint(_ t: CGFloat) -> CGPoint {
+            let x = t * CGFloat(spine.count - 1)
+            let i = min(spine.count - 2, Int(x)), f = x - CGFloat(i)
+            return CGPoint(x: spine[i].x + (spine[i + 1].x - spine[i].x) * f, y: spine[i].y + (spine[i + 1].y - spine[i].y) * f)
+        }
+        for _ in 0..<(len > 700 ? 2 : 1) {
+            let t0 = CGFloat.random(in: 0.05...0.4), t1 = min(0.97, t0 + .random(in: 0.35...0.6))
+            let k = 3 + Int(len / 500)
+            let wrap = CGFloat.random(in: 14...24) * s + 5
+            var pts = [CGPoint](), ws = [CGFloat]()
+            var sgn: CGFloat = Bool.random() ? 1 : -1
+            for j in 0...k {
+                let u = CGFloat(j) / CGFloat(k)
+                let c = spinePoint(t0 + (t1 - t0) * u)
+                let o = (j == 0 || j == k) ? sgn * wrap * 0.3 : sgn * wrap * .random(in: 0.6...1.2)
+                pts.append(CGPoint(x: c.x + nx * o, y: c.y + ny * o))
+                ws.append((j == 0 || j == k) ? 0 : (3 * s + 1.2) * sin(.pi * u) + 0.8)
+                sgn = -sgn
+            }
+            addPolygon(body, ribbon(pts, ws))
         }
         return body
+    }
+
+    /// 沿折线两侧按各点宽度撑开，得到一个两头尖的多边形
+    private static func ribbon(_ pts: [CGPoint], _ widths: [CGFloat]) -> [CGPoint] {
+        var left = [CGPoint](), right = [CGPoint]()
+        for (i, p) in pts.enumerated() {
+            let prev = pts[max(0, i - 1)], next = pts[min(pts.count - 1, i + 1)]
+            let tl = max(0.001, hypot(next.x - prev.x, next.y - prev.y))
+            let px = -(next.y - prev.y) / tl, py = (next.x - prev.x) / tl
+            let h = widths[i] / 2
+            left.append(CGPoint(x: p.x + px * h, y: p.y + py * h))
+            right.append(CGPoint(x: p.x - px * h, y: p.y - py * h))
+        }
+        return left + right.reversed()
     }
 
     /// 多边形统一成同一个绕向再加进路径，免得重叠处按非零规则被挖空
