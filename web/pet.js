@@ -85,7 +85,7 @@
   }
 
   // ---------- 电流 ----------
-  // 身上冒出的小电光：和身体同一个画法——锯齿折线撑成两头尖的粉红多边形，左下错开一层紫描边。
+  // 身上冒出的小电光：和长距离电流同一个画法——细锯齿折线撑成两头尖的纯粉红多边形。
   // 两组交替闪，每次化成电流都重新生成
   const zapGroups = document.querySelectorAll('#zapsvg g');
   function arcPolygon() {
@@ -97,7 +97,7 @@
     for (let k = 0; k <= n; k++) {
       const off = (k % 2 ? 1 : -1) * (4 + Math.random() * 5);
       const px = x + dx * seg * k + nx * off, py = y + dy * seg * k + ny * off;
-      const w = k === 0 || k === n ? 0 : 1.6 + Math.random() * 2.2;
+      const w = k === 0 || k === n ? 0 : 0.9 + Math.random() * 1.1;
       left.push([px + nx * w, py + ny * w]);
       right.unshift([px - nx * w, py - ny * w]);
     }
@@ -107,14 +107,10 @@
     zapGroups.forEach(g => {
       g.replaceChildren();
       for (let i = 0; i < 4; i++) {
-        const pts = arcPolygon();
-        for (const cls of ['zap-ol', 'zap-fill']) {
-          const p = document.createElementNS(SVG_NS, 'polygon');
-          p.setAttribute('points', pts);
-          p.setAttribute('class', cls);
-          if (cls === 'zap-ol') p.setAttribute('transform', 'translate(-1.5,1.5)');
-          g.appendChild(p);
-        }
+        const p = document.createElementNS(SVG_NS, 'polygon');
+        p.setAttribute('points', arcPolygon());
+        p.setAttribute('class', 'zap-fill');
+        g.appendChild(p);
       }
     });
   }

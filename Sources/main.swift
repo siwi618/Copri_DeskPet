@@ -272,8 +272,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         NSPoint(x: f.minX + 131 * scale, y: f.maxY - 360 * scale)
     }
 
-    // 一道动漫画风的电流：和 Copri 身体同一个画法——锯齿折线撑成有粗细的多边形（两头尖、中间粗，
-    // 拐角处戳出带折角的尖刺），填她身上的粉红，左下错开一层紫色描边，里面撒白色闪粉，不发光。
+    // 一道动漫画风的电流：细细的锯齿折线撑成两头尖的多边形，偶尔戳出一根尖刺，
+    // 左右零散地伴着几块像她脚边那样的不规则碎片；纯粉红平涂，不描边、不发光。
     // 先从起点往终点「长」出来，停一拍再从起点收掉；形状每 0.08 秒换一帧，像动画里一拍三的闪烁。
     // 用 Core Animation 在一个临时的透明窗口里画，全程由 GPU 合成，几乎不占 CPU
     private func showBolt(from a: NSPoint, to b: NSPoint, done: @escaping () -> Void) {
@@ -299,31 +299,21 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         let frames = (0..<3).map { _ in Self.boltShape(from: p0, to: p1, s: s) }
         let duration = min(0.55, 0.32 + Double(hypot(p1.x - p0.x, p1.y - p0.y)) / 6000)
         let pink = CGColor(red: 0.894, green: 0.188, blue: 0.314, alpha: 1)   // --hair #e43050
-        let purple = CGColor(red: 0.545, green: 0.310, blue: 0.941, alpha: 1) // --hair-ol #8b4ff0
 
         let bolt = CALayer()
         bolt.frame = view.bounds
         view.layer?.addSublayer(bolt)
-        // 紫描边：和身体一样往左下错开 2.5 个网页单位
-        let layers: [(CGColor, CGPoint, KeyPath<(body: CGPath, specks: CGPath), CGPath>)] = [
-            (purple, CGPoint(x: -2.5 * s, y: -2.5 * s), \.body),
-            (pink, .zero, \.body),
-            (CGColor(red: 1, green: 1, blue: 1, alpha: 0.85), .zero, \.specks),
-        ]
-        for (color, offset, part) in layers {
-            let l = CAShapeLayer()
-            l.frame = view.bounds.offsetBy(dx: offset.x, dy: offset.y)
-            l.path = frames[0][keyPath: part]
-            l.fillColor = color
-            l.strokeColor = nil
-            let flicker = CAKeyframeAnimation(keyPath: "path")
-            flicker.values = frames.map { $0[keyPath: part] }
-            flicker.calculationMode = .discrete
-            flicker.duration = 0.24
-            flicker.repeatCount = .infinity
-            l.add(flicker, forKey: "flicker")
-            bolt.addSublayer(l)
-        }
+        let l = CAShapeLayer()
+        l.frame = view.bounds
+        l.path = frames[0]
+        l.fillColor = pink
+        let flicker = CAKeyframeAnimation(keyPath: "path")
+        flicker.values = frames
+        flicker.calculationMode = .discrete
+        flicker.duration = 0.24
+        flicker.repeatCount = .infinity
+        l.add(flicker, forKey: "flicker")
+        bolt.addSublayer(l)
         // 遮罩沿起点→终点的直线推进：头先冲到终点，停一拍，尾巴再从起点收掉
         let mask = CAShapeLayer()
         mask.frame = view.bounds
@@ -362,8 +352,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         boltWindow = w
     }
 
-    /// 生成一帧电流：body 是粉红多边形（主干 + 尖刺），specks 是里面的白色闪粉
-    private static func boltShape(from a: CGPoint, to b: CGPoint, s: CGFloat) -> (body: CGPath, specks: CGPath) {
+    /// 生成一帧电流：细主干 + 少量尖刺 + 伴在左右的不规则碎片，合成一个粉红路径
+    private static func boltShape(from a: CGPoint, to b: CGPoint, s: CGFloat) -> CGPath {
         let dx = b.x - a.x, dy = b.y - a.y
         let len = max(1, hypot(dx, dy))
         let ux = dx / len, uy = dy / len, nx = -uy, ny = ux
@@ -382,13 +372,13 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         spine.append(b)
 
         // 粗细：两头收成尖，中间粗；两侧各自随机，边缘不平行，像一块块碎片拼起来
-        let wMax = 30 * s + 5
+        let wMax = 9 * s + 2.5
         var left = [CGPoint](), right = [CGPoint](), widths = [CGFloat]()
         for (i, p) in spine.enumerated() {
             let t = CGFloat(i) / CGFloat(spine.count - 1)
             let end = i == 0 || i == spine.count - 1
             let base = wMax * (0.35 + 0.65 * sin(.pi * t))
-            let wl = end ? 0 : base * .random(in: 0.12...0.8), wr = end ? 0 : base * .random(in: 0.12...0.8)
+            let wl = end ? 0 : base * .random(in: 0.25...0.75), wr = end ? 0 : base * .random(in: 0.25...0.75)
             let prev = spine[max(0, i - 1)], next = spine[min(spine.count - 1, i + 1)]
             let tl = max(0.001, hypot(next.x - prev.x, next.y - prev.y))
             let px = -(next.y - prev.y) / tl, py = (next.x - prev.x) / tl
@@ -416,32 +406,39 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
                 spike(from: mid, dir: (cx, cy), length: L * 0.45, half: half * 0.5, depth: depth - 1)
             }
         }
-        for i in 1..<(spine.count - 1) where Double.random(in: 0..<1) < 0.4 {
+        for i in 1..<(spine.count - 1) where Double.random(in: 0..<1) < 0.12 {
             let p = spine[i]
             let side: CGFloat = ((p.x - a.x) * nx + (p.y - a.y) * ny) >= 0 ? 1 : -1
             let fwd = CGFloat.random(in: -0.2...1.1)
             var bx = nx * side + ux * fwd, by = ny * side + uy * fwd
             let bl = hypot(bx, by)
             bx /= bl; by /= bl
-            spike(from: p, dir: (bx, by), length: CGFloat.random(in: 24...56) * s + 8,
-                  half: max(1.5, widths[i] * 0.3), depth: 0)
+            spike(from: p, dir: (bx, by), length: CGFloat.random(in: 18...40) * s + 6,
+                  half: max(1, widths[i] * 0.35), depth: 0)
         }
 
-        // 白色闪粉：沿主干撒在粉红里面
-        let specks = CGMutablePath()
-        for _ in 0..<Int(len / 7) {
-            let i = Int.random(in: 1..<(spine.count - 1))
-            let j = Bool.random() ? i - 1 : i + 1
-            let t = CGFloat.random(in: 0...1)
-            let q = CGPoint(x: spine[i].x + (spine[j].x - spine[i].x) * t, y: spine[i].y + (spine[j].y - spine[i].y) * t)
-            let lim = min(widths[i], widths[j]) * 0.2
-            let o = CGFloat.random(in: -lim...max(-lim, lim))
-            let r = CGFloat.random(in: 0.5...1.4) * max(1, s * 1.6)
-            let c = CGPoint(x: q.x + nx * o, y: q.y + ny * o)
-            addPolygon(specks, [CGPoint(x: c.x, y: c.y + r), CGPoint(x: c.x + r * 0.8, y: c.y),
-                                CGPoint(x: c.x, y: c.y - r * 0.9), CGPoint(x: c.x - r * 0.7, y: c.y)])
+        // 伴随碎片：像她脚边漂着的那种细长、带缺口台阶的不规则碎片，零零散散地落在电流左右，
+        // 大体顺着电流的方向，各自歪一点
+        for _ in 0..<max(2, Int(len / (90 * s + 30))) {
+            let t = CGFloat.random(in: 0.08...0.92)
+            let side: CGFloat = Bool.random() ? 1 : -1
+            let dist = side * (amp * 0.7 + CGFloat.random(in: 10...36) * s + 5)
+            let c = CGPoint(x: a.x + dx * t + nx * dist, y: a.y + dy * t + ny * dist)
+            let ang = atan2(uy, ux) + CGFloat.random(in: -0.6...0.6)
+            let L = CGFloat.random(in: 22...52) * s + 6, W = CGFloat.random(in: 3...7) * s + 1.5
+            // 局部坐标：沿长轴 0…L，一侧带一个台阶缺口，两头尖
+            let notch = CGFloat.random(in: 0.35...0.65)
+            let local: [(CGFloat, CGFloat)] = [
+                (0, 0), (L * 0.18, W * 0.5), (L * notch, W * 0.6), (L * (notch + 0.05), W * 0.15),
+                (L * (notch + 0.15), W * 0.55), (L, W * .random(in: -0.1...0.3)),
+                (L * 0.8, -W * 0.45), (L * 0.35, -W * 0.5), (L * 0.1, -W * 0.25),
+            ]
+            let ca = cos(ang), sa = sin(ang)
+            addPolygon(body, local.map { (x, y) in
+                CGPoint(x: c.x + (x - L / 2) * ca - y * sa, y: c.y + (x - L / 2) * sa + y * ca)
+            })
         }
-        return (body, specks)
+        return body
     }
 
     /// 多边形统一成同一个绕向再加进路径，免得重叠处按非零规则被挖空
