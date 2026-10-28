@@ -73,6 +73,13 @@
 
         <!-- 头发（后层）：轮廓从原图 general/08.29.28 自动描出（红色部分，含发束间的缝隙），按脸的位置对齐缩放 -->
         <g id="hair" transform="translate(0,10)">
+          <!-- 左眼左侧的暗面（照 hair/2.png）：红发后面垫一整块黑（只有这一层），从红发发束之间的缺口里露成往上戳的黑尖，
+               下沿是几根朝左下的黑尖。画在整个粉色头发图层（紫描边、底部细黑边、填色）下面，粉色头发的边缘压在黑上。
+               垫在红发下面，黑和粉之间没有缝，头发摆动时也一起动（写成画布坐标，整体往上挪回 10） -->
+          <g transform="translate(0,-10)">
+            <polygon class="hair-ol" points="52,95 112,95 112,140 105,143 93,163 87,146 68,151 57,159 53,143 37,151 32,140 24,143 48,110" transform="translate(-2.4,2.6)"/>
+            <polygon class="ink" points="52,95 112,95 112,140 105,143 93,163 87,146 68,151 57,159 53,143 37,151 32,140 24,143 48,110"/>
+          </g>
           <use href="#hairShape" class="hair-ol" transform="translate(-3.2,3.6)"/>
           <!-- 底部细黑边：黑色同形状往下错开一点，只在朝下的边缘露出来 -->
           <use href="#hairShape" class="ink" transform="translate(0,2.2)"/>
@@ -80,13 +87,6 @@
                脸后几根朝上的黑尖，同样带紫色错位描边 -->
           <use href="#crownShape" class="hair-ol" transform="translate(-2.4,2.6)"/>
           <use href="#crownShape" class="ink"/>
-          <!-- 左眼左侧的暗面（照 hair/2.png）：红发后面垫一整块黑（只有这一层），从红发发束之间的缺口里露成往上戳的黑尖，
-               下沿是几根朝左下的黑尖。它只有自己的一道紫色错位描边；红发的紫描边画在它下面被盖住，所以不会叠出两层紫线。
-               垫在红发下面，黑和粉之间没有缝，头发摆动时也一起动（写成画布坐标，整体往上挪回 10） -->
-          <g transform="translate(0,-10)">
-            <polygon class="hair-ol" points="52,95 112,95 112,140 105,143 93,163 87,146 68,151 57,159 53,143 37,151 32,140 24,143 48,110" transform="translate(-2.4,2.6)"/>
-            <polygon class="ink" points="52,95 112,95 112,140 105,143 93,163 87,146 68,151 57,159 53,143 37,151 32,140 24,143 48,110"/>
-          </g>
           <use href="#hairShape" class="hair-fill"/>
           <rect x="0" y="-60" width="260" height="240" fill="url(#hazeGrad)" clip-path="url(#hairClip)"/>
           <rect class="glitter" x="0" y="-60" width="260" height="240" fill="url(#fineGlit)" clip-path="url(#hairClip)" mask="url(#topFade)"/>
