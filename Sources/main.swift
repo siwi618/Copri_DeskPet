@@ -308,7 +308,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
     }
 
     // 一道动漫画风的电流：细细的折线（按距离折 3～5 次）撑成两头尖的多边形，偶尔戳出一根尖刺，
-    // 一两股更细的电丝缠在主干上、来回穿过它；纯粉红平涂，不描边、不发光。
+    // 一两股更细的电丝缠在主干上、来回穿过它；平涂不描边、不发光。粉多绿少（和她身上的配色比例一样）：
+    // 主干和尖刺是粉的，第一股缠绕的电丝是绿的。
     // 先从起点往终点「长」出来，停一拍再从起点收掉；形状每 0.08 秒换一帧，像动画里一拍三的闪烁。
     // 用 Core Animation 在一个临时的透明窗口里画，全程由 GPU 合成，几乎不占 CPU
     private func showBolt(from a: NSPoint, to b: NSPoint, done: @escaping () -> Void) {
@@ -332,23 +333,26 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         let p0 = CGPoint(x: a.x - rect.minX, y: a.y - rect.minY)
         let p1 = CGPoint(x: b.x - rect.minX, y: b.y - rect.minY)
         let frames = (0..<3).map { _ in Self.boltShape(from: p0, to: p1, s: s) }
+        let green = CGColor(red: 0.424, green: 0.941, blue: 0.518, alpha: 1) // --green #6cf084
         let duration = min(0.55, 0.32 + Double(hypot(p1.x - p0.x, p1.y - p0.y)) / 6000)
         let pink = CGColor(red: 0.894, green: 0.188, blue: 0.314, alpha: 1)   // --hair #e43050
 
         let bolt = CALayer()
         bolt.frame = view.bounds
         view.layer?.addSublayer(bolt)
-        let l = CAShapeLayer()
-        l.frame = view.bounds
-        l.path = frames[0]
-        l.fillColor = pink
-        let flicker = CAKeyframeAnimation(keyPath: "path")
-        flicker.values = frames
-        flicker.calculationMode = .discrete
-        flicker.duration = 0.24
-        flicker.repeatCount = .infinity
-        l.add(flicker, forKey: "flicker")
-        bolt.addSublayer(l)
+        for (color, paths) in [(pink, frames.map(\.pink)), (green, frames.map(\.green))] {
+            let l = CAShapeLayer()
+            l.frame = view.bounds
+            l.path = paths[0]
+            l.fillColor = color
+            let flicker = CAKeyframeAnimation(keyPath: "path")
+            flicker.values = paths
+            flicker.calculationMode = .discrete
+            flicker.duration = 0.24
+            flicker.repeatCount = .infinity
+            l.add(flicker, forKey: "flicker")
+            bolt.addSublayer(l)
+        }
         // 遮罩沿起点→终点的直线推进：头先冲到终点，停一拍，尾巴再从起点收掉
         let mask = CAShapeLayer()
         mask.frame = view.bounds
@@ -387,12 +391,13 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         boltWindow = w
     }
 
-    /// 生成一帧电流：细主干（按距离折 3～5 次）+ 偶尔一根尖刺 + 一两股缠在主干上的细电丝，合成一个粉红路径
-    private static func boltShape(from a: CGPoint, to b: CGPoint, s: CGFloat) -> CGPath {
+    /// 生成一帧电流：细主干（按距离折 3～5 次）+ 偶尔一根尖刺 + 一两股缠在主干上的细电丝。
+    /// 主干、尖刺和第二股电丝合成粉色路径，第一股电丝单独是绿色路径
+    private static func boltShape(from a: CGPoint, to b: CGPoint, s: CGFloat) -> (pink: CGPath, green: CGPath) {
         let dx = b.x - a.x, dy = b.y - a.y
         let len = max(1, hypot(dx, dy))
         let ux = dx / len, uy = dy / len, nx = -uy, ny = ux
-        let body = CGMutablePath()
+        let body = CGMutablePath(), greenPath = CGMutablePath()
 
         // 主干：3～5 个折角（距离越远越多），折点间距不均匀，大体左右交替
         let bends = min(5, 3 + Int(len / 600))
@@ -434,7 +439,7 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
             let i = min(spine.count - 2, Int(x)), f = x - CGFloat(i)
             return CGPoint(x: spine[i].x + (spine[i + 1].x - spine[i].x) * f, y: spine[i].y + (spine[i + 1].y - spine[i].y) * f)
         }
-        for _ in 0..<(len > 700 ? 2 : 1) {
+        for strand in 0..<(len > 700 ? 2 : 1) {
             let t0 = CGFloat.random(in: 0.05...0.4), t1 = min(0.97, t0 + .random(in: 0.35...0.6))
             let k = 3 + Int(len / 500)
             let wrap = CGFloat.random(in: 14...24) * s + 5
@@ -448,9 +453,9 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
                 ws.append((j == 0 || j == k) ? 0 : (3 * s + 1.2) * sin(.pi * u) + 0.8)
                 sgn = -sgn
             }
-            addPolygon(body, ribbon(pts, ws))
+            addPolygon(strand == 0 ? greenPath : body, ribbon(pts, ws))
         }
-        return body
+        return (body, greenPath)
     }
 
     /// 沿折线两侧按各点宽度撑开，得到一个两头尖的多边形

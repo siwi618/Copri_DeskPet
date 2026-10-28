@@ -112,7 +112,7 @@
       for (let i = 0; i < 4; i++) {
         const p = document.createElementNS(SVG_NS, 'polygon');
         p.setAttribute('points', arcPolygon());
-        p.setAttribute('class', 'zap-fill');
+        p.setAttribute('class', i === 3 ? 'green' : 'zap-fill'); // 四道里一道绿
         g.appendChild(p);
       }
     });
@@ -131,8 +131,9 @@
   const cEyes = svgCrumple.querySelectorAll('.c-eye');
   const cShards = cEl('cShards'), cArcs = cEl('cArcs'), cFace = cEl('cFace'), cMouth = cEl('cMouth'), cMouthOl = cEl('cMouthOl');
   const SHARDS = 7, ARCS = 3;
+  // 粉多绿少，和她身上的配色比例差不多：发片 7 片里 2 片绿，冒的电 3 道里 1 道绿
   for (let i = 0; i < SHARDS; i++) {
-    for (const cls of ['ol', 'zap-fill']) {
+    for (const cls of ['ol', i % 3 === 2 ? 'green' : 'zap-fill']) {
       const p = document.createElementNS(SVG_NS, 'polygon');
       p.setAttribute('class', cls);
       cShards.appendChild(p);
@@ -140,13 +141,57 @@
   }
   for (let i = 0; i < ARCS; i++) {
     const p = document.createElementNS(SVG_NS, 'polygon');
-    p.setAttribute('class', 'zap-fill');
+    p.setAttribute('class', i === ARCS - 1 ? 'green' : 'zap-fill');
     cArcs.appendChild(p);
   }
   const ss = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
   const rnd = (a, b) => a + Math.random() * (b - a);
   const fmt = pts => pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
   let crumpleTimer = null, cState = null;
+
+  // 额头 / 下巴各是一条开口的轮廓线（两头是嘴角 V7、V3，固定不动），再用直线连回去。
+  // 要更多顶点：反复把最长的一段从中间偏一点切开（新点记作 s0、s1……）；要更少：反复删掉删了以后形状变化最小的点。
+  // 都在原始脸的坐标里算，同一个顶点数每帧得到同一组点，形状才是连续变形而不是乱跳
+  const mkPath = (idx) => {
+    const pts = idx.map(i => ({ x: FACE[i][0], y: FACE[i][1], key: 'v' + i, orig: true }));
+    const mx = pts.reduce((s, p) => s + p.x, 0) / pts.length, my = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    const size = Math.max(...pts.map(p => Math.hypot(p.x - mx, p.y - my)));
+    return { pts, mx, my, size, cache: {} };
+  };
+  const UPPER_PATH = mkPath([7, 8, 0, 1, 2, 3]), JAW_PATH = mkPath([3, 4, 5, 6, 7]);
+  const SPLIT = [.42, .6, .36, .55, .47, .64, .4, .52, .58, .45, .38, .62];
+  function piecePoints(piece, n) {
+    if (piece.cache[n]) return piece.cache[n];
+    let pts = piece.pts.slice();
+    let sid = 0;
+    while (pts.length < n) {
+      let best = 0, bl = -1;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+        if (l > bl) { bl = l; best = i; }
+      }
+      const f = SPLIT[sid % SPLIT.length], A = pts[best], B = pts[best + 1];
+      pts.splice(best + 1, 0, { x: A.x + (B.x - A.x) * f, y: A.y + (B.y - A.y) * f, key: 's' + sid++, orig: false });
+    }
+    while (pts.length > n) {
+      let best = 1, ba = Infinity;
+      for (let i = 1; i < pts.length - 1; i++) {
+        const A = pts[i - 1], P = pts[i], B = pts[i + 1];
+        const area = Math.abs((P.x - A.x) * (B.y - A.y) - (B.x - A.x) * (P.y - A.y));
+        if (area < ba) { ba = area; best = i; }
+      }
+      pts.splice(best, 1);
+    }
+    // 每个点往外的方向（从这块脸的中心指出去）
+    pts = pts.map(p => { const l = Math.hypot(p.x - piece.mx, p.y - piece.my) || 1; return { ...p, ox: (p.x - piece.mx) / l, oy: (p.y - piece.my) / l }; });
+    return (piece.cache[n] = pts);
+  }
+  // 每个顶点一个「往外戳多少」的随机量，每帧只漂一点：形状是慢慢扭动着变，不是原地抖
+  function drift() {
+    const nz = cState.noise;
+    for (const key in nz) nz[key] = Math.max(-.6, Math.min(1.3, nz[key] + rnd(-.14, .14)));
+    for (const r of cState.ringNoise) for (let q = 0; q < r.length; q++) r[q] = Math.max(-1, Math.min(1, r[q] + rnd(-.25, .25)));
+  }
 
   function drawCrumple(u) {
     if (u < 0.3) {
@@ -158,26 +203,33 @@
     root.classList.add('c-face');
     const open = ss(.3, .45, u), close = ss(.5, .65, u), shrink = ss(.65, 1, u);
     const k = Math.pow(1 - shrink, 1.4);
-    const sx = (1 + 1.6 * open) * k, sy = (1 + 1 * open) * k;
+    const sx = (1 + 1 * open) * k, sy = (1 + .7 * open) * k;
     const cx = 131, cy = 128 - 12 * open * (1 - shrink);
     const drop = 330 * open * (1 - close) * k;
     const rot = cState.dir * shrink * 2.2; // 只往一个方向扭，不左右抖
     const cos = Math.cos(rot), sin = Math.sin(rot);
-    const wob = 0.04 * open + 0.3 * shrink;
     const place = (lx, ly) => [cx + lx * cos - ly * sin, cy + lx * sin + ly * cos];
-    // 脸的每个顶点只抖一次，额头和下巴共用的顶点才对得上
-    const local = FACE.map(([x, y]) => [(x - 131 + rnd(-1, 1) * wob * 26) * sx, (y - 128 + rnd(-1, 1) * wob * 22) * sy]);
-    const upper = UPPER.map(i => place(...local[i]));
-    const jaw = JAW.map(i => place(local[i][0], local[i][1] + drop));
+    drift();
+    // 脸的轮廓：张嘴时一边变大一边长出越来越多的顶点、往外戳成不规整的多边形；缩小时顶点一个个并掉，最后剩个三角
+    const amp = .5 * open;
+    const nUp = Math.max(3, 6 + Math.round(10 * open) - Math.round(13 * shrink));
+    const nJaw = Math.max(3, 5 + Math.round(5 * open) - Math.round(7 * shrink));
+    const morph = (piece, n, dy) => piecePoints(piece, n).map(q => {
+      const m = q.orig ? .35 : 1; // 原来的角只微微动，新长出来的顶点才大幅往外戳 / 往里凹
+      const d = amp * m * cState.noise[q.key] * piece.size;
+      return place((q.x - 131 + q.ox * d) * sx, (q.y - 128 + q.oy * d) * sy + dy);
+    });
+    const upper = morph(UPPER_PATH, nUp, 0), jaw = morph(JAW_PATH, nJaw, drop);
     cUpper.setAttribute('points', fmt(upper));
     cJaw.setAttribute('points', fmt(jaw));
     const ol = 'translate(-1.5,1.5)';
     cUpperOl.setAttribute('points', fmt(upper)); cUpperOl.setAttribute('transform', ol);
     cJawOl.setAttribute('points', fmt(jaw)); cJawOl.setAttribute('transform', ol);
     // 嘴里面：额头下沿到下巴上沿之间，两边腮帮往外鼓成不规整的折线（每帧乱跳一点）
+    // 额头的路径从 V7 走到 V3，下巴从 V3 走到 V7：两头就是嘴角
     const bulge = 34 * open * (1 - close) * k;
-    const side = (i, sgn) => [.22, .5, .78].map(f => place(local[i][0] + sgn * bulge * rnd(.35, 1.1) * (f === .5 ? 1.2 : .7), local[i][1] + drop * (f + rnd(-.06, .06))));
-    const mouth = [upper[3], ...side(3, 1), jaw[0], jaw[4], ...side(7, -1).reverse(), upper[4]];
+    const corner = (v, sgn, f) => place((FACE[v][0] - 131) * sx + sgn * bulge * rnd(.35, 1.1) * (f === .5 ? 1.2 : .7), (FACE[v][1] - 128) * sy + drop * (f + rnd(-.06, .06)));
+    const mouth = [upper[upper.length - 1], ...[.22, .5, .78].map(f => corner(3, 1, f)), jaw[0], jaw[jaw.length - 1], ...[.78, .5, .22].map(f => corner(7, -1, f)), upper[0]];
     cMouth.setAttribute('points', fmt(mouth));
     cMouthOl.setAttribute('points', fmt(mouth)); cMouthOl.setAttribute('transform', ol);
     // 绿面罩：额头那段脸的一条横带，上下沿各多一个随机折点，越缩越歪
@@ -185,12 +237,20 @@
     const mpt = (x, y) => place((x - 131 + rnd(-1, 1) * mw * 22) * sx, (y - 128 + rnd(-1, 1) * mw * 14) * sy);
     const [a, b, c, d] = MASK.map(i => FACE[i]);
     cMask.setAttribute('points', fmt([mpt(...a), mpt((a[0] + b[0]) / 2 + rnd(-6, 6), a[1]), mpt(...b), mpt(...c), mpt((c[0] + d[0]) / 2 + rnd(-5, 5), c[1]), mpt(...d)]));
-    // 眼睛：跟着脸走，后半段每帧随机压扁、拉长、歪一下（像在挤眉弄眼）
+    // 眼睛：跟着脸走，后半段每帧随机压扁、拉长、歪一下（像在挤眉弄眼）；外圈的绿环也变成一圈会变形的多边形
+    const ringAmp = .18 * open + .55 * shrink;
     cEyes.forEach((g, i) => {
       const [ex, ey] = place((EYES[i][0] - 131) * sx, (EYES[i][1] - 128) * sy);
       const base = 4.8 * Math.sqrt(sx * sy);
       const ex2 = base * (1 + rnd(-0.4, 0.3) * shrink * 1.6), ey2 = base * (1 + rnd(-0.7, 0.4) * shrink * 1.6);
       g.setAttribute('transform', `translate(${ex.toFixed(1)},${ey.toFixed(1)}) rotate(${(rot * 57.3 + rnd(-25, 25) * shrink).toFixed(0)}) scale(${Math.max(.05, ex2).toFixed(2)},${Math.max(.05, ey2).toFixed(2)})`);
+      const n = 10, ring = [];
+      for (let q = 0; q < n; q++) {
+        const ang = (q + cState.ringNoise[i][q] * .35) / n * Math.PI * 2;
+        const r = 1 + ringAmp * cState.ringNoise[i][(q + 3) % n] * (q % 2 ? 1 : .6);
+        ring.push([Math.cos(ang) * r, Math.sin(ang) * r]);
+      }
+      g.querySelector('.c-ring').setAttribute('points', ring.map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' '));
     });
     // 粉色发片：不规整的细长多边形，绕着脸转、一圈圈被吸进去
     const shardOn = u > .33 && u < .97;
@@ -246,7 +306,11 @@
     cState = {
       dir: Math.random() < .5 ? 1 : -1,
       shards: Array.from({ length: SHARDS }, (_, i) => ({ a: i / SHARDS * Math.PI * 2 + rnd(-.4, .4), r: rnd(60, 105), len: rnd(28, 50), wid: rnd(5, 11) })),
+      noise: {},
+      ringNoise: [0, 1].map(() => Array.from({ length: 10 }, () => rnd(-1, 1))),
     };
+    for (let i = 0; i < 9; i++) cState.noise['v' + i] = rnd(-.2, .5);
+    for (let i = 0; i < 24; i++) cState.noise['s' + i] = i % 3 === 2 ? rnd(-.6, -.1) : rnd(.3, 1.2); // 大多往外戳，隔几个往里凹
     const t0 = performance.now();
     const ms = dir === 'out' ? 800 : 520;
     const frame = () => {
