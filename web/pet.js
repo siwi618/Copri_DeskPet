@@ -118,44 +118,143 @@
     });
   }
 
-  // 凝缩多边形：一圈长短交替的尖角（像被揉皱的纸团），每帧角度、长短都随机抖一下再整体转一点，
-  // 逐帧（20 帧/秒，动画那种一拍几的顿感）由大缩到一个点；反过来就是从点里长出来。
-  // 粉色外层 + 紫色错位描边 + 里面一块黑，和她身上同一套配色
+  // ---------- 凝缩 ----------
+  // 时间轴 u：0～.3 身体蹲下再弹回（CSS）；.3 起画出来的脸正好盖在真脸上；.3～.45 张嘴（额头连面罩往上撑大、下巴掉到脚下）；
+  // .5～.65 下巴合上来把身体扫进脸里；.65～1 合上的脸往一个方向扭着缩成一个点。到达时 u 从 1 倒放回 .3。
+  // 每 50ms 换一帧（动画那种一拍几的顿感），所有形状每帧随机抖一下，绿面罩和眼睛越到后面变形越厉害
+  const FACE = [[107, 104], [155, 104], [152.9, 115.5], [147.5, 133], [146, 138.6], [128, 146.8], [115, 139.6], [114.5, 133], [109.1, 115.5]];
+  const UPPER = [0, 1, 2, 3, 7, 8], JAW = [3, 4, 5, 6, 7], MASK = [8, 2, 3, 7];
+  const EYES = [[121.1, 126.4], [140.9, 126.4]];
   const svgCrumple = document.getElementById('crumplesvg');
-  const crumple = svgCrumple.querySelectorAll('polygon');
-  let crumpleTimer = null;
-  function jagged(cx, cy, rx, ry, rot, n) {
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const a = rot + (i + (Math.random() - 0.5) * 0.5) / n * Math.PI * 2;
-      const r = i % 2 ? 0.45 + Math.random() * 0.3 : 0.85 + Math.random() * 0.25;
-      pts.push((cx + Math.cos(a) * rx * r).toFixed(1) + ',' + (cy + Math.sin(a) * ry * r).toFixed(1));
+  const cEl = id => document.getElementById(id);
+  const cUpper = cEl('cUpper'), cJaw = cEl('cJaw'), cUpperOl = cEl('cUpperOl'), cJawOl = cEl('cJawOl'), cMask = cEl('cMask');
+  const cEyes = svgCrumple.querySelectorAll('.c-eye');
+  const cShards = cEl('cShards'), cArcs = cEl('cArcs'), cFace = cEl('cFace'), cMouth = cEl('cMouth'), cMouthOl = cEl('cMouthOl');
+  const SHARDS = 7, ARCS = 3;
+  for (let i = 0; i < SHARDS; i++) {
+    for (const cls of ['ol', 'zap-fill']) {
+      const p = document.createElementNS(SVG_NS, 'polygon');
+      p.setAttribute('class', cls);
+      cShards.appendChild(p);
     }
-    return pts.join(' ');
+  }
+  for (let i = 0; i < ARCS; i++) {
+    const p = document.createElementNS(SVG_NS, 'polygon');
+    p.setAttribute('class', 'zap-fill');
+    cArcs.appendChild(p);
+  }
+  const ss = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const fmt = pts => pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  let crumpleTimer = null, cState = null;
+
+  function drawCrumple(u) {
+    if (u < 0.3) {
+      cFace.style.display = cShards.style.display = cArcs.style.display = cMouth.parentNode.style.display = 'none';
+      root.classList.remove('c-face');
+      return;
+    }
+    cFace.style.display = cMouth.parentNode.style.display = '';
+    root.classList.add('c-face');
+    const open = ss(.3, .45, u), close = ss(.5, .65, u), shrink = ss(.65, 1, u);
+    const k = Math.pow(1 - shrink, 1.4);
+    const sx = (1 + 1.6 * open) * k, sy = (1 + 1 * open) * k;
+    const cx = 131, cy = 128 - 12 * open * (1 - shrink);
+    const drop = 330 * open * (1 - close) * k;
+    const rot = cState.dir * shrink * 2.2; // 只往一个方向扭，不左右抖
+    const cos = Math.cos(rot), sin = Math.sin(rot);
+    const wob = 0.04 * open + 0.3 * shrink;
+    const place = (lx, ly) => [cx + lx * cos - ly * sin, cy + lx * sin + ly * cos];
+    // 脸的每个顶点只抖一次，额头和下巴共用的顶点才对得上
+    const local = FACE.map(([x, y]) => [(x - 131 + rnd(-1, 1) * wob * 26) * sx, (y - 128 + rnd(-1, 1) * wob * 22) * sy]);
+    const upper = UPPER.map(i => place(...local[i]));
+    const jaw = JAW.map(i => place(local[i][0], local[i][1] + drop));
+    cUpper.setAttribute('points', fmt(upper));
+    cJaw.setAttribute('points', fmt(jaw));
+    const ol = 'translate(-1.5,1.5)';
+    cUpperOl.setAttribute('points', fmt(upper)); cUpperOl.setAttribute('transform', ol);
+    cJawOl.setAttribute('points', fmt(jaw)); cJawOl.setAttribute('transform', ol);
+    // 嘴里面：额头下沿到下巴上沿之间，两边腮帮往外鼓成不规整的折线（每帧乱跳一点）
+    const bulge = 34 * open * (1 - close) * k;
+    const side = (i, sgn) => [.22, .5, .78].map(f => place(local[i][0] + sgn * bulge * rnd(.35, 1.1) * (f === .5 ? 1.2 : .7), local[i][1] + drop * (f + rnd(-.06, .06))));
+    const mouth = [upper[3], ...side(3, 1), jaw[0], jaw[4], ...side(7, -1).reverse(), upper[4]];
+    cMouth.setAttribute('points', fmt(mouth));
+    cMouthOl.setAttribute('points', fmt(mouth)); cMouthOl.setAttribute('transform', ol);
+    // 绿面罩：额头那段脸的一条横带，上下沿各多一个随机折点，越缩越歪
+    const mw = 0.08 + 0.35 * shrink;
+    const mpt = (x, y) => place((x - 131 + rnd(-1, 1) * mw * 22) * sx, (y - 128 + rnd(-1, 1) * mw * 14) * sy);
+    const [a, b, c, d] = MASK.map(i => FACE[i]);
+    cMask.setAttribute('points', fmt([mpt(...a), mpt((a[0] + b[0]) / 2 + rnd(-6, 6), a[1]), mpt(...b), mpt(...c), mpt((c[0] + d[0]) / 2 + rnd(-5, 5), c[1]), mpt(...d)]));
+    // 眼睛：跟着脸走，后半段每帧随机压扁、拉长、歪一下（像在挤眉弄眼）
+    cEyes.forEach((g, i) => {
+      const [ex, ey] = place((EYES[i][0] - 131) * sx, (EYES[i][1] - 128) * sy);
+      const base = 4.8 * Math.sqrt(sx * sy);
+      const ex2 = base * (1 + rnd(-0.4, 0.3) * shrink * 1.6), ey2 = base * (1 + rnd(-0.7, 0.4) * shrink * 1.6);
+      g.setAttribute('transform', `translate(${ex.toFixed(1)},${ey.toFixed(1)}) rotate(${(rot * 57.3 + rnd(-25, 25) * shrink).toFixed(0)}) scale(${Math.max(.05, ex2).toFixed(2)},${Math.max(.05, ey2).toFixed(2)})`);
+    });
+    // 粉色发片：不规整的细长多边形，绕着脸转、一圈圈被吸进去
+    const shardOn = u > .33 && u < .97;
+    cShards.style.display = shardOn ? '' : 'none';
+    if (shardOn) {
+      const pull = ss(.33, .95, u);
+      const ps = cShards.children;
+      cState.shards.forEach((s, i) => {
+        const ang = s.a + cState.dir * pull * 3.2;
+        const r = s.r * (1 - 0.88 * pull);
+        const px = cx + Math.cos(ang) * r, py = cy + 40 * (1 - pull) + Math.sin(ang) * r * 1.6;
+        const len = s.len * (1 - 0.7 * pull), wid = s.wid * (1 - 0.6 * pull);
+        const ta = ang + Math.PI / 2 + rnd(-.5, .5), tx = Math.cos(ta), ty = Math.sin(ta);
+        // 沿一条线来回折的不规整多边形：一边走一边左右乱跳，有的顶点缩进去成缺口
+        const n = 6 + (i % 3), pts = [];
+        for (let q = 0; q < n; q++) {
+          const along = (q < n / 2 ? q / (n / 2 - 1) : (n - 1 - q) / (n / 2 - 1)) - .5;
+          const side = (q < n / 2 ? 1 : -1) * wid * rnd(.15, 1.1);
+          pts.push([px + tx * along * len * rnd(.8, 1.15) - ty * side, py + ty * along * len * rnd(.8, 1.15) + tx * side]);
+        }
+        const str = fmt(pts);
+        ps[i * 2].setAttribute('points', str); ps[i * 2].setAttribute('transform', 'translate(-1.5,1.5)');
+        ps[i * 2 + 1].setAttribute('points', str);
+      });
+    }
+    // 往外噼啪冒的电：从脸边上随机甩出去的细锯齿
+    const arcOn = u > .42;
+    cArcs.style.display = arcOn ? '' : 'none';
+    if (arcOn) {
+      const size = 30 * Math.max(sx, sy) + 6;
+      [...cArcs.children].forEach(p => {
+        const a = rnd(0, Math.PI * 2), dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
+        let x = cx + dx * size * .5, y = cy + dy * size * .6;
+        const seg = rnd(5, 9) * (0.5 + k), left = [], right = [];
+        for (let q = 0; q <= 3; q++) {
+          const off = (q % 2 ? 1 : -1) * rnd(2, 5);
+          const qx = x + dx * seg * q + nx * off, qy = y + dy * seg * q + ny * off;
+          const w = q === 0 || q === 3 ? 0 : rnd(.6, 1.2);
+          left.push([qx + nx * w, qy + ny * w]); right.unshift([qx - nx * w, qy - ny * w]);
+        }
+        p.setAttribute('points', fmt(left.concat(right)));
+      });
+    }
   }
   function stopCrumple() {
     clearInterval(crumpleTimer);
-    crumple.forEach(p => p.removeAttribute('points'));
+    cState = null;
+    drawCrumple(0);
   }
-  // from / to：0 = 一个点，1 = 罩住整个人；ms 内从 from 变到 to，delay 后才出现
-  function runCrumple(from, to, ms, delay) {
+  // out：0.8 秒从完整的人凝缩成一个点；in：0.52 秒从点里倒放回来
+  function runCrumple(dir) {
     clearInterval(crumpleTimer);
-    const t0 = performance.now() + delay;
-    let rot = Math.random() * 6;
-    const frame = () => {
-      const t = (performance.now() - t0) / ms;
-      if (t < 0) return;
-      if (t >= 1) { stopCrumple(); return; }
-      const k = from + (to - from) * (t * t * (3 - 2 * t)); // 两头慢中间快
-      const cx = 131, cy = 360 - 75 * k, rx = 3 + 100 * k, ry = 3 + 205 * k;
-      rot += 0.5 + Math.random() * 0.4;
-      const outer = jagged(cx, cy, rx, ry, rot, 11);
-      crumple[0].setAttribute('points', outer);
-      crumple[0].setAttribute('transform', 'translate(-2.5,2.5)');
-      crumple[1].setAttribute('points', outer);
-      crumple[2].setAttribute('points', jagged(cx + 3, cy - 4, rx * 0.38, ry * 0.34, -rot * 1.3, 7));
-      svgCrumple.style.opacity = Math.min(1, t * 5, (1 - t) * 8).toFixed(2); // 刚出现和收尾时淡一下
+    cState = {
+      dir: Math.random() < .5 ? 1 : -1,
+      shards: Array.from({ length: SHARDS }, (_, i) => ({ a: i / SHARDS * Math.PI * 2 + rnd(-.4, .4), r: rnd(60, 105), len: rnd(28, 50), wid: rnd(5, 11) })),
     };
+    const t0 = performance.now();
+    const ms = dir === 'out' ? 800 : 520;
+    const frame = () => {
+      const t = Math.min(1, (performance.now() - t0) / ms);
+      if (cState) drawCrumple(dir === 'out' ? t : 1 - 0.7 * t);
+      if (t >= 1) { clearInterval(crumpleTimer); if (dir === 'in') drawCrumple(0); }
+    };
+    frame();
     crumpleTimer = setInterval(frame, 50);
   }
 
@@ -262,9 +361,9 @@
     setState(s) { if (s !== state) setState(s); },
     getState() { return state; },
     dropped() { if (state === 'drag') { setState('idle'); flash('land', 700); sayRandom('drop'); } },
-    // 化成电流：先凝缩成一个点（0.7 秒，Swift 等这么久再放电流）；到了以后从点里长出来
-    zapOut() { setState('idle'); seedArcs(); flash('zap-out', 5000); runCrumple(0.9, 0, 520, 180); },
-    zapIn() { root.classList.remove('sit'); seedArcs(); flash('zap-in', 650); runCrumple(0, 0.9, 260, 0); },
+    // 化成电流：脸张开把身体吞进去、扭着缩成一个点（0.8 秒，Swift 等这么久再从脸的位置放电流）；到了以后倒放
+    zapOut() { setState('idle'); seedArcs(); flash('zap-out', 5000); runCrumple('out'); },
+    zapIn() { root.classList.remove('sit'); seedArcs(); flash('zap-in', 700); runCrumple('in'); },
     // 坐下 / 站起来（Swift 决定时机：游荡途中偶尔歇一会儿，或者待机久了）
     sit() { if (state === 'idle' || state === 'sleep') { root.classList.add('sit'); if (Math.random() < 0.4) sayRandom('sit'); } },
     stand() { root.classList.remove('sit'); },

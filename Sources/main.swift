@@ -280,8 +280,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         facing = ""
         js("copri.zapOut()")
         let from = panel.frame
-        // 等身体凝缩成一个点（pet.js 的凝缩多边形 0.7 秒），再从那个点放出闪电
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
+        // 等她把自己吞进脸里、缩成一个点（pet.js 的凝缩 0.8 秒），再从那个点放出闪电
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             guard let self else { return }
             if self.dragging { self.zapping = false; return }
             self.panel.alphaValue = 0
@@ -290,7 +290,7 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
                 if !self.dragging { self.panel.setFrameOrigin(t) }
                 self.panel.alphaValue = 1
                 self.js("copri.zapIn()")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     self.zapping = false
                     if self.mode == .wander {
                         self.target = nil
@@ -302,9 +302,9 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         }
     }
 
-    // 网页坐标里身体中心约在 (131, 360)
+    // 电流的起点 / 落点：凝缩缩成的那个点，在脸中心——SVG 里 (131, 128)，图层离窗口顶 60，所以是 188
     private func bodyCenter(_ f: NSRect) -> NSPoint {
-        NSPoint(x: f.minX + 131 * scale, y: f.maxY - 360 * scale)
+        NSPoint(x: f.minX + 131 * scale, y: f.maxY - 188 * scale)
     }
 
     // 一道动漫画风的电流：细细的折线（按距离折 3～5 次）撑成两头尖的多边形，偶尔戳出一根尖刺，

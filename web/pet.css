@@ -73,7 +73,10 @@ html, body {
 /* ---------- 基础动作 ---------- */
 #pet { transform-origin: 131px 400px; animation: float 3.2s ease-in-out infinite; }
 #shadow { transform-origin: 131px 556px; animation: shadow 3.2s ease-in-out infinite; }
-#hairwrap { transform-origin: 131px 220px; animation: flicker 3.6s ease-in-out infinite; transition: transform .6s cubic-bezier(.3, .9, .35, 1.08); }
+/* 头发和头用同一个轴心——脸上的 (131,144)（#hairwrap 是 div，SVG 图层在它里面往下挪了 60，所以写 204）：跟着头走的位移/转角写在 translate、rotate 两个独立属性里（和 #head 的 transform 一模一样、同样的过渡），
+   头发自己的飘动只用 transform 绕这个轴心转一点、拉长一点——轴心在脸上，所以脸周围几乎不动，暗面和脸永远对得上 */
+#hairwrap { transform-origin: 131px 204px; animation: flicker 3.6s ease-in-out infinite;
+  transition: transform .6s cubic-bezier(.3, .9, .35, 1.08), translate .35s cubic-bezier(.34, 1.56, .64, 1), rotate .35s cubic-bezier(.34, 1.56, .64, 1); }
 #bangs { transform-origin: 131px 106px; }
 /* 状态切换用带回弹的缓动：先冲过头一点再落回来，不再是线性硬切 */
 #head { transform-origin: 131px 144px; transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
@@ -123,9 +126,9 @@ html, body {
 }
 @keyframes hairHop {
   0% { transform: none; }
-  20% { transform: translateY(-4px) scaleY(1.04); }
-  48% { transform: translateY(6px) scaleY(.95); }
-  70% { transform: translateY(-3px) scaleY(1.02); }
+  20% { transform: scaleY(.96); }
+  48% { transform: scaleY(1.06); }
+  70% { transform: scaleY(.98); }
   100% { transform: rotate(-1.2deg); }
 }
 
@@ -149,6 +152,7 @@ html, body {
 .sleep .m-sleep { display: inline; }
 .sleep #pet { animation-duration: 6s; }
 .sleep #head { transform: rotate(-8deg) translateY(2px); }
+.sleep #hairwrap { rotate: -8deg; translate: 0 2px; }
 .sleep #zzz { display: inline; }
 #zzz, #hearts { display: none; }
 #zzz text { font: bold 16px/1 "Avenir Next", sans-serif; fill: var(--hair-ol); animation: zfloat 2.4s ease-in infinite; }
@@ -170,6 +174,8 @@ html, body {
 .move-left #hairwrap, .move-right #hairwrap { animation: hairWalk .32s .1s ease-in-out infinite; }
 .move-left #head { transform: translateX(-3px) rotate(-2deg); }
 .move-right #head { transform: translateX(3px) rotate(2deg); }
+.move-left #hairwrap { translate: -3px 0; rotate: -2deg; }
+.move-right #hairwrap { translate: 3px 0; rotate: 2deg; }
 @keyframes prep { to { transform: translateY(4px) scale(1.03, .96); } }
 @keyframes walk {
   0%, 100% { transform: rotate(calc(var(--dir) * -6deg)); }
@@ -193,9 +199,10 @@ html, body {
   0%, 100% { transform: rotate(calc(var(--dir) * -8deg)); }
   50% { transform: rotate(calc(var(--dir) * 8deg)); }
 }
+/* 头发往后拖：绕脸转一点，越往外甩得越多 */
 @keyframes hairWalk {
-  0%, 100% { transform: rotate(calc(var(--dir) * 4deg)) translateX(calc(var(--dir) * 6px)); }
-  50% { transform: rotate(calc(var(--dir) * 5.5deg)) translateX(calc(var(--dir) * 7px)) scaleY(.98); }
+  0%, 100% { transform: rotate(calc(var(--dir) * 1.5deg)); }
+  50% { transform: rotate(calc(var(--dir) * 3deg)) scaleY(.98); }
 }
 
 /* 停下：惯性往前冲，再回弹两下站稳；头发甩过头再落回 */
@@ -211,9 +218,9 @@ html, body {
   100% { transform: none; }
 }
 @keyframes hairArrive {
-  0% { transform: rotate(calc(var(--dir) * 5deg)) translateX(calc(var(--dir) * 6px)); }
-  35% { transform: rotate(calc(var(--dir) * -4deg)) translateX(calc(var(--dir) * -3px)); }
-  65% { transform: rotate(calc(var(--dir) * 2deg)); }
+  0% { transform: rotate(calc(var(--dir) * 3deg)); }
+  35% { transform: rotate(calc(var(--dir) * -4deg)); }
+  65% { transform: rotate(calc(var(--dir) * 1.5deg)); }
   100% { transform: rotate(-1.2deg); }
 }
 
@@ -235,28 +242,36 @@ html, body {
 /* 一拍三：每组 0.16 秒里亮一半、灭一半，两组错开，像动画里的电光闪烁 */
 #zapsvg g { animation: crackle .16s steps(1) infinite; }
 #zapsvg g + g { animation-delay: .08s; }
-/* 凝缩：身体先蹲一下蓄力，然后左右乱扭（斜切来回翻）着缩成一个点，缩到身体中心 (131,360)；
-   同时 pet.js 画的扭曲多边形把她吞掉。到了以后反过来：多边形从点里长出来，身体再弹出来 */
-.zap-out #pet { animation: zapOut .7s cubic-bezier(.5, 0, .7, 1) forwards; }
-.zap-in #pet { animation: zapIn .45s .15s ease-out both; }
+/* 凝缩：身体先蹲一下蓄力、弹回原样，这时 pet.js 画的脸正好盖在真脸上；脸张开后，身体被往脸的中心（SVG 里 (131,128)，#pet 里 y=188）缩进去
+   （translateY = -212×(1-缩放)，#pet 的轴心在 y=400）。到了以后倒过来：身体从脸中心长出来，压扁一下再站稳 */
+.zap-out #pet { animation: zapOut .8s ease-in-out forwards; }
+.zap-in #pet { animation: zapIn .52s ease-out both; }
 .zap-out #shadow, .zap-in #shadow { animation: none; opacity: 0; }
 @keyframes zapOut {
   0% { transform: none; opacity: 1; }
-  16% { transform: translateY(6px) scale(1.06, .9); opacity: 1; }
-  30% { transform: translateY(-4px) skewX(10deg) scale(.86, .8); }
-  44% { transform: translateY(-14px) skewX(-16deg) rotate(4deg) scale(.6, .56); opacity: .6; }
-  54% { transform: translateY(-24px) skewX(20deg) rotate(-6deg) scale(.38, .36); opacity: 0; }
-  70%, 100% { transform: translateY(-40px) scale(.06); opacity: 0; }
+  18% { transform: translateY(6px) scale(1.05, .92); }
+  30% { transform: none; }
+  50% { transform: translateY(-31.8px) scale(.85); opacity: 1; }
+  58% { transform: translateY(-116.6px) scale(.45); opacity: .8; }
+  66%, 100% { transform: translateY(-201.4px) scale(.05); opacity: 0; }
 }
 @keyframes zapIn {
-  0% { transform: translateY(-40px) skewX(-14deg) scale(.2); opacity: 0; }
-  30% { transform: translateY(-14px) skewX(10deg) scale(.7, .65); opacity: 1; }
-  60% { transform: translateY(5px) scale(1.08, .92); }
-  80% { transform: translateY(-2px) scale(.97, 1.04); }
+  0%, 50% { transform: translateY(-201.4px) scale(.05); opacity: 0; }
+  71% { transform: translateY(-31.8px) scale(.85); opacity: 1; }
+  86% { transform: translateY(4px) scale(1.05, .94); }
   100% { transform: none; opacity: 1; }
 }
 @keyframes crackle { 0% { opacity: 1; } 50% { opacity: 0; } }
 #zapsvg .zap-fill, #crumplesvg .zap-fill { fill: var(--hair); }
+#crumplesvg, #crumpleback { display: none; }
+.zap-out #crumplesvg, .zap-in #crumplesvg, .zap-out #crumpleback, .zap-in #crumpleback { display: block; }
+/* 画出来的脸盖上以后，真脸藏起来（不然张嘴时会从缝里露出来） */
+.c-face #head { visibility: hidden; }
+/* 身上的小电光只在身体还在的时候闪：凝缩时身体没了就收掉，到达时身体长出来才出现 */
+.zap-out #zapsvg { animation: arcsOut .8s steps(1) forwards; }
+.zap-in #zapsvg { animation: arcsIn .52s steps(1) both; }
+@keyframes arcsOut { 0% { opacity: 1; } 58%, 100% { opacity: 0; } }
+@keyframes arcsIn { 0% { opacity: 0; } 55%, 100% { opacity: 1; } }
 
 /* 坐下（.sit，待机久了随机出现）：躯干往下沉、往前倾（纵向压扁），头和头发跟着下来、歪向托着下巴的右手；
    站姿四肢淡出、坐姿四肢淡入。坐着时不再上下飘 */
@@ -267,7 +282,8 @@ html, body {
 .sit .sitpose { opacity: 1; visibility: visible; transition: opacity .3s .2s, visibility 0s .2s; }
 .sit .p-torso { transform: translate(0px, 125px) scale(1, .72); }
 .sit #head, .sit.sleep #head { transform: translate(6px, 155px) rotate(12deg); transition: transform .6s cubic-bezier(.3, .9, .35, 1.08); }
-.sit #hairwrap { animation: none; transform: translate(6px, 155px) rotate(12deg); }
+.sit #hairwrap, .sit.sleep #hairwrap { animation: none; transform: none; translate: 6px 155px; rotate: 12deg;
+  transition: translate .6s cubic-bezier(.3, .9, .35, 1.08), rotate .6s cubic-bezier(.3, .9, .35, 1.08); }
 .sit #pet { animation: none; }
 .crease { fill: none; stroke: var(--ink); stroke-width: .9; stroke-linejoin: round; }
 

@@ -15,6 +15,10 @@
     <g id="shadow"><ellipse cx="131" cy="556" rx="26" ry="3.5"/></g>
   </svg>
 
+  <!-- 凝缩时张开的嘴里面（黑），画在身体后面：身体在黑嘴前面被吸进去 -->
+  <svg id="crumpleback" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
+    <polygon class="ol" id="cMouthOl"/><polygon class="ink" id="cMouth"/>
+  </svg>
   <div id="pet">
     <!-- 漂浮碎片：单独一层，整层飘动 -->
     <svg id="shardsvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
@@ -243,9 +247,20 @@
   </div>
   <!-- 化成电流时身上噼啪作响的电弧（pet.js 每次随机生成），平时隐藏 -->
   <svg id="zapsvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg"><g></g><g></g></svg>
-  <!-- 凝缩：化成电流前，身体被一块扭曲的多边形吞掉、越缩越小直到一个点（到了以后反过来从点里长出来），pet.js 逐帧换形状 -->
+  <!-- 凝缩：化成电流前，她的脸像嘴一样张开（额头连绿面罩往上撑大、下巴掉到脚底下），下巴再合上来把身体扫进脸里，
+       合上的脸一边扭一边缩成一个点，绿面罩和眼睛的形状一直在变，碎成不规整的粉色发片被卷进去、往外噼啪冒电。
+       到了以后整段倒放。形状由 pet.js 逐帧生成 -->
   <svg id="crumplesvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
-    <polygon class="ol"/><polygon class="zap-fill"/><polygon class="ink"/>
+    <g id="cShards"></g>
+    <g id="cFace">
+      <polygon class="ol" id="cUpperOl"/><polygon class="ol" id="cJawOl"/>
+      <polygon class="ink" id="cUpper"/><polygon class="ink" id="cJaw"/>
+      <polygon class="green" id="cMask"/>
+      <!-- 和真脸同一双眼睛（左眼镜像），每帧单独压扁拉长 -->
+      <g class="c-eye"><path class="ink" d="M-1.44,1.02 L-1.41,.5 L-1.33,0 L-1.17,-.6 L-.98,-.88 L-1.36,-1.77 L-.67,-1.25 Q-.25,-1.55 .41,-1.63 L1.15,-1.63 Q1.65,-1.57 2.05,-1.42 L1.68,-.06 L1.26,.57 L1.11,.77 L1.3,1.35 L.95,1.03 Q.45,1.1 .04,1.1 Z" transform="scale(-1,1)"/><circle r="1" class="green"/><circle r=".88" class="ink"/><circle r=".61" class="iris"/><circle r=".33" class="ink"/><circle r=".29" class="glint"/></g>
+      <g class="c-eye"><path class="ink" d="M-1.44,1.02 L-1.41,.5 L-1.33,0 L-1.17,-.6 L-.98,-.88 L-1.36,-1.77 L-.67,-1.25 Q-.25,-1.55 .41,-1.63 L1.15,-1.63 Q1.65,-1.57 2.05,-1.42 L1.68,-.06 L1.26,.57 L1.11,.77 L1.3,1.35 L.95,1.03 Q.45,1.1 .04,1.1 Z"/><circle r="1" class="green"/><circle r=".88" class="ink"/><circle r=".61" class="iris"/><circle r=".33" class="ink"/><circle r=".29" class="glint"/></g>
+    </g>
+    <g id="cArcs"></g>
   </svg>
 </div>
 <script src="pet.js"></script>
