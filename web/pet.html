@@ -55,7 +55,7 @@
           <polygon id="bangsShape" points="104,94 140,94 134,112.3 131.6,112.6 123.9,129.9 128.4,112.9 121,114.6 116.2,111.6 111.4,114.4 106,111.8"/>
           <clipPath id="bangsClip"><use href="#bangsShape"/></clipPath>
 
-          <path id="crownShape" d="M110,124 L103.3,126.6 L77,113.5 L79.4,119.4 L55.5,123 L57.9,126.6 L36.4,129 L22.1,137.8 L30.4,137.8 L55.5,131.4 L53.1,134.5 L81.8,129 L79.4,132.6 L103.3,135 L112,134 Z M118,124 L112.8,93 L126,118 Z M134,118 L151,92 L142,121 Z M146,122 L160.6,101.5 L151,127 Z M148,129 L166,136 L163,138.5 L176,147 L160,141 L146,136 Z"/>
+          <path id="crownShape" d="M118,124 L112.8,93 L126,118 Z M134,118 L151,92 L142,121 Z M146,122 L160.6,101.5 L151,127 Z M148,129 L166,136 L163,138.5 L176,147 L160,141 L146,136 Z"/>
           <clipPath id="hairClip"><use href="#hairShape"/></clipPath>
           <!-- 闪烁闪粉层不要落在右眼上方那块黑尖上（坐标是头发组内的，所以往上挪 10） -->
           <mask id="noShade" maskUnits="userSpaceOnUse" x="-20" y="-80" width="300" height="300">
@@ -73,20 +73,20 @@
 
         <!-- 头发（后层）：轮廓从原图 general/08.29.28 自动描出（红色部分，含发束间的缝隙），按脸的位置对齐缩放 -->
         <g id="hair" transform="translate(0,10)">
-          <!-- 左眼左侧的暗面（照 hair/2.png）：红发后面垫一块黑，从红发发束之间的缺口里露成一排往上戳的黑尖，
-               下沿再露出一截台阶状的黑；红发自己的紫色错位描边正好落在黑上，就是原图里那几道斜紫线。
-               垫在红发下面，所以黑和粉之间不会有缝，头发摆动时也一起动（写成画布坐标，整体往上挪回 10） -->
-          <g transform="translate(0,-10)">
-            <polygon class="hair-ol" points="24,95 112,95 112,160 104,156 96,160 88,164 80,166 70,158 60,150 50,146 40,150 30,154 24,152" transform="translate(-2.4,2.6)"/>
-            <polygon class="ink" points="24,95 112,95 112,160 104,156 96,160 88,164 80,166 70,158 60,150 50,146 40,150 30,154 24,152"/>
-          </g>
           <use href="#hairShape" class="hair-ol" transform="translate(-3.2,3.6)"/>
           <!-- 底部细黑边：黑色同形状往下错开一点，只在朝下的边缘露出来 -->
           <use href="#hairShape" class="ink" transform="translate(0,2.2)"/>
           <!-- 头发暗面：头后面压在红发下面的黑色闪电发束，只从红发底下露出来（照 08.29.28 底部，坐标按原图换算）：
-               左下一大束台阶状黑发、右下一小束、脸后几根朝上的黑尖，同样带紫色错位描边 -->
+               脸后几根朝上的黑尖，同样带紫色错位描边 -->
           <use href="#crownShape" class="hair-ol" transform="translate(-2.4,2.6)"/>
           <use href="#crownShape" class="ink"/>
+          <!-- 左眼左侧的暗面（照 hair/2.png）：红发后面垫一整块黑（只有这一层），从红发发束之间的缺口里露成往上戳的黑尖，
+               下沿是几根朝左下的黑尖。它只有自己的一道紫色错位描边；红发的紫描边画在它下面被盖住，所以不会叠出两层紫线。
+               垫在红发下面，黑和粉之间没有缝，头发摆动时也一起动（写成画布坐标，整体往上挪回 10） -->
+          <g transform="translate(0,-10)">
+            <polygon class="hair-ol" points="52,95 112,95 112,148 104,152 93,175 89,161 76,165 60,158 43,171 40,157 26,152 24,143 48,110" transform="translate(-2.4,2.6)"/>
+            <polygon class="ink" points="52,95 112,95 112,148 104,152 93,175 89,161 76,165 60,158 43,171 40,157 26,152 24,143 48,110"/>
+          </g>
           <use href="#hairShape" class="hair-fill"/>
           <rect x="0" y="-60" width="260" height="240" fill="url(#hazeGrad)" clip-path="url(#hairClip)"/>
           <rect class="glitter" x="0" y="-60" width="260" height="240" fill="url(#fineGlit)" clip-path="url(#hairClip)" mask="url(#topFade)"/>
