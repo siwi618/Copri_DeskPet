@@ -118,6 +118,47 @@
     });
   }
 
+  // 凝缩多边形：一圈长短交替的尖角（像被揉皱的纸团），每帧角度、长短都随机抖一下再整体转一点，
+  // 逐帧（20 帧/秒，动画那种一拍几的顿感）由大缩到一个点；反过来就是从点里长出来。
+  // 粉色外层 + 紫色错位描边 + 里面一块黑，和她身上同一套配色
+  const svgCrumple = document.getElementById('crumplesvg');
+  const crumple = svgCrumple.querySelectorAll('polygon');
+  let crumpleTimer = null;
+  function jagged(cx, cy, rx, ry, rot, n) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = rot + (i + (Math.random() - 0.5) * 0.5) / n * Math.PI * 2;
+      const r = i % 2 ? 0.45 + Math.random() * 0.3 : 0.85 + Math.random() * 0.25;
+      pts.push((cx + Math.cos(a) * rx * r).toFixed(1) + ',' + (cy + Math.sin(a) * ry * r).toFixed(1));
+    }
+    return pts.join(' ');
+  }
+  function stopCrumple() {
+    clearInterval(crumpleTimer);
+    crumple.forEach(p => p.removeAttribute('points'));
+  }
+  // from / to：0 = 一个点，1 = 罩住整个人；ms 内从 from 变到 to，delay 后才出现
+  function runCrumple(from, to, ms, delay) {
+    clearInterval(crumpleTimer);
+    const t0 = performance.now() + delay;
+    let rot = Math.random() * 6;
+    const frame = () => {
+      const t = (performance.now() - t0) / ms;
+      if (t < 0) return;
+      if (t >= 1) { stopCrumple(); return; }
+      const k = from + (to - from) * (t * t * (3 - 2 * t)); // 两头慢中间快
+      const cx = 131, cy = 360 - 75 * k, rx = 3 + 100 * k, ry = 3 + 205 * k;
+      rot += 0.5 + Math.random() * 0.4;
+      const outer = jagged(cx, cy, rx, ry, rot, 11);
+      crumple[0].setAttribute('points', outer);
+      crumple[0].setAttribute('transform', 'translate(-2.5,2.5)');
+      crumple[1].setAttribute('points', outer);
+      crumple[2].setAttribute('points', jagged(cx + 3, cy - 4, rx * 0.38, ry * 0.34, -rot * 1.3, 7));
+      svgCrumple.style.opacity = Math.min(1, t * 5, (1 - t) * 8).toFixed(2); // 刚出现和收尾时淡一下
+    };
+    crumpleTimer = setInterval(frame, 50);
+  }
+
   // ---------- 说话 ----------
   let bubbleTimer = null;
   function say(text, ms) {
@@ -176,6 +217,7 @@
     if (Math.hypot(e.screenX - down.x, e.screenY - down.y) > 4) {
       down.dragging = true;
       root.classList.remove(...FLASHES); // 化成电流途中被抓住也要立刻现形
+      stopCrumple();
       setState('drag');
       sayRandom('drag');
       post({ type: 'dragStart' });
@@ -220,8 +262,9 @@
     setState(s) { if (s !== state) setState(s); },
     getState() { return state; },
     dropped() { if (state === 'drag') { setState('idle'); flash('land', 700); sayRandom('drop'); } },
-    zapOut() { setState('idle'); seedArcs(); flash('zap-out', 5000); },
-    zapIn() { root.classList.remove('sit'); seedArcs(); flash('zap-in', 480); },
+    // 化成电流：先凝缩成一个点（0.7 秒，Swift 等这么久再放电流）；到了以后从点里长出来
+    zapOut() { setState('idle'); seedArcs(); flash('zap-out', 5000); runCrumple(0.9, 0, 520, 180); },
+    zapIn() { root.classList.remove('sit'); seedArcs(); flash('zap-in', 650); runCrumple(0, 0.9, 260, 0); },
     // 坐下 / 站起来（Swift 决定时机：游荡途中偶尔歇一会儿，或者待机久了）
     sit() { if (state === 'idle' || state === 'sleep') { root.classList.add('sit'); if (Math.random() < 0.4) sayRandom('sit'); } },
     stand() { root.classList.remove('sit'); },

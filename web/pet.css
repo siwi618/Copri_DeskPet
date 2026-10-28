@@ -227,29 +227,36 @@ html, body {
   100% { transform: none; }
 }
 
-/* 长距离：化成一道红色电流。先蹲下蓄力，再被拉成一条细线消失（zap-out）；
-   到了以后从细线里弹出来，压扁一下再站稳（zap-in）。中间那道闪电由 Swift 用 Core Animation 画 */
+/* 长距离：化成一道红色电流。先蹲下蓄力，再扭曲着凝缩成一个点（zap-out）；
+   到了以后从点里长出来、压扁一下再站稳（zap-in）。中间那道闪电由 Swift 用 Core Animation 画 */
 #zapsvg { display: none; }
+#crumplesvg { pointer-events: none; }
 .zap-out #zapsvg, .zap-in #zapsvg { display: block; }
 /* 一拍三：每组 0.16 秒里亮一半、灭一半，两组错开，像动画里的电光闪烁 */
 #zapsvg g { animation: crackle .16s steps(1) infinite; }
 #zapsvg g + g { animation-delay: .08s; }
-.zap-out #pet { animation: zapOut .3s ease-in forwards; }
-.zap-in #pet { animation: zapIn .45s ease-out both; }
+/* 凝缩：身体先蹲一下蓄力，然后左右乱扭（斜切来回翻）着缩成一个点，缩到身体中心 (131,360)；
+   同时 pet.js 画的扭曲多边形把她吞掉。到了以后反过来：多边形从点里长出来，身体再弹出来 */
+.zap-out #pet { animation: zapOut .7s cubic-bezier(.5, 0, .7, 1) forwards; }
+.zap-in #pet { animation: zapIn .45s .15s ease-out both; }
 .zap-out #shadow, .zap-in #shadow { animation: none; opacity: 0; }
 @keyframes zapOut {
   0% { transform: none; opacity: 1; }
-  35% { transform: translateY(6px) scale(1.06, .9); opacity: 1; }
-  100% { transform: translateY(-24px) scale(.06, 1.25); opacity: 0; }
+  16% { transform: translateY(6px) scale(1.06, .9); opacity: 1; }
+  30% { transform: translateY(-4px) skewX(10deg) scale(.86, .8); }
+  44% { transform: translateY(-14px) skewX(-16deg) rotate(4deg) scale(.6, .56); opacity: .6; }
+  54% { transform: translateY(-24px) skewX(20deg) rotate(-6deg) scale(.38, .36); opacity: 0; }
+  70%, 100% { transform: translateY(-40px) scale(.06); opacity: 0; }
 }
 @keyframes zapIn {
-  0% { transform: translateY(-24px) scale(.06, 1.25); opacity: 0; }
-  40% { transform: translateY(5px) scale(1.08, .92); opacity: 1; }
-  68% { transform: translateY(-2px) scale(.97, 1.04); }
+  0% { transform: translateY(-40px) skewX(-14deg) scale(.2); opacity: 0; }
+  30% { transform: translateY(-14px) skewX(10deg) scale(.7, .65); opacity: 1; }
+  60% { transform: translateY(5px) scale(1.08, .92); }
+  80% { transform: translateY(-2px) scale(.97, 1.04); }
   100% { transform: none; opacity: 1; }
 }
 @keyframes crackle { 0% { opacity: 1; } 50% { opacity: 0; } }
-#zapsvg .zap-fill { fill: var(--hair); }
+#zapsvg .zap-fill, #crumplesvg .zap-fill { fill: var(--hair); }
 
 /* 坐下（.sit，待机久了随机出现）：躯干往下沉、往前倾（纵向压扁），头和头发跟着下来、歪向托着下巴的右手；
    站姿四肢淡出、坐姿四肢淡入。坐着时不再上下飘 */

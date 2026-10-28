@@ -280,8 +280,8 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
         facing = ""
         js("copri.zapOut()")
         let from = panel.frame
-        // 等身体被拉成细线消失，再放出闪电
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        // 等身体凝缩成一个点（pet.js 的凝缩多边形 0.7 秒），再从那个点放出闪电
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
             guard let self else { return }
             if self.dragging { self.zapping = false; return }
             self.panel.alphaValue = 0
@@ -290,7 +290,7 @@ final class PetController: NSObject, WKScriptMessageHandler, NSMenuDelegate {
                 if !self.dragging { self.panel.setFrameOrigin(t) }
                 self.panel.alphaValue = 1
                 self.js("copri.zapIn()")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.48) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
                     self.zapping = false
                     if self.mode == .wander {
                         self.target = nil

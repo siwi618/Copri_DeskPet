@@ -243,6 +243,10 @@
   </div>
   <!-- 化成电流时身上噼啪作响的电弧（pet.js 每次随机生成），平时隐藏 -->
   <svg id="zapsvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg"><g></g><g></g></svg>
+  <!-- 凝缩：化成电流前，身体被一块扭曲的多边形吞掉、越缩越小直到一个点（到了以后反过来从点里长出来），pet.js 逐帧换形状 -->
+  <svg id="crumplesvg" class="layer" viewBox="0 0 260 560" xmlns="http://www.w3.org/2000/svg">
+    <polygon class="ol"/><polygon class="zap-fill"/><polygon class="ink"/>
+  </svg>
 </div>
 <script src="pet.js"></script>
 </body>
